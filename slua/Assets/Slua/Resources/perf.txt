@@ -64,7 +64,7 @@ function test5()
 		local v = GameObject()
 		v:AddComponent(SkinnedMeshRenderer)
 		local c=v:GetComponent(SkinnedMeshRenderer)
-		c.castShadows=false
+		--c.castShadows=false
 		c.receiveShadows=false
 	end
 	print("test5/lua " .. (os.clock() - start));
