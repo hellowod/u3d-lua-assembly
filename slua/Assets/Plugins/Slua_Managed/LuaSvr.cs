@@ -203,7 +203,7 @@ namespace SLua
 			}
 		}
 
-		public void init(Action<int> tick,Action complete,LuaSvrFlag flag=LuaSvrFlag.LSF_BASIC)
+		public void init(Action<int> tick, Action complete, LuaSvrFlag flag=LuaSvrFlag.LSF_BASIC)
         {
 #if !SLUA_STANDALONE
 		    if (lgo == null
@@ -257,11 +257,11 @@ namespace SLua
 #endif
             }
 
-		public object start(string main)
+		public object start(string luaPath)
 		{
-			if (main != null)
+			if (luaPath != null)
 			{
-				luaState.doFile(main);
+				luaState.doFile(luaPath);
 				LuaFunction func = (LuaFunction)luaState["main"];
 				if(func!=null)
 					return func.call();
