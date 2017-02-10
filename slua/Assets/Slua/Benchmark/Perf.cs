@@ -1,24 +1,24 @@
 ﻿using UnityEngine;
 using System.Collections;
 using SLua;
+
 public class Perf : MonoBehaviour
 {
+	private LuaSvr lua;
 
-	LuaSvr l;
-	// Use this for initialization
-	void Start()
+    private void Start()
 	{
-		var startMem = System.GC.GetTotalMemory (true);
+		long startMem = System.GC.GetTotalMemory (true);
 
-		var start = Time.realtimeSinceStartup;
-		l = new LuaSvr();
-		l.init(null, () =>
+		float start = Time.realtimeSinceStartup;
+		lua = new LuaSvr();
+		lua.init(null, () =>
 		{
 			Debug.Log ("start cost: " + (Time.realtimeSinceStartup - start));
 
 			var endMem = System.GC.GetTotalMemory (true);
 			Debug.Log ("startMem: " + startMem + ", endMem: " + endMem + ", " + "cost mem: " + (endMem - startMem));
-			l.start("perf");
+			lua.start("perf");
 		});
 
 #if UNITY_5
@@ -37,49 +37,49 @@ public class Perf : MonoBehaviour
 
 	void OnGUI()
 	{
-		if (!l.inited)
+		if (!lua.inited)
 			return;
 
 		if (GUI.Button(new Rect(10, 10, 120, 50), "Test1"))
 		{
 			logText = "";
-			l.luaState.getFunction("test1").call();
+			lua.luaState.getFunction("test1").call();
 		}
 
 		if (GUI.Button(new Rect(10, 100, 120, 50), "Test2"))
 		{
 			logText = "";
-			l.luaState.getFunction("test2").call();
+			lua.luaState.getFunction("test2").call();
 		}
 
 		if (GUI.Button(new Rect(10, 200, 120, 50), "Test3"))
 		{
 			logText = "";
-			l.luaState.getFunction("test3").call();
+			lua.luaState.getFunction("test3").call();
 		}
 
 		if (GUI.Button(new Rect(10, 300, 120, 50), "Test4"))
 		{
 			logText = "";
-			l.luaState.getFunction("test4").call();
+			lua.luaState.getFunction("test4").call();
 		}
 
 		if (GUI.Button(new Rect(200, 10, 120, 50), "Test5"))
 		{
 			logText = "";
-			l.luaState.getFunction("test5").call();
+			lua.luaState.getFunction("test5").call();
 		}
 
         if (GUI.Button(new Rect(200, 100, 120, 50), "Test6 jit"))
         {
             logText = "";
-            l.luaState.getFunction("test6").call();
+            lua.luaState.getFunction("test6").call();
         }
 
 		if (GUI.Button(new Rect(200, 200, 120, 50), "Test6 non-jit"))
 		{
 			logText = "";
-			l.luaState.getFunction("test7").call();
+			lua.luaState.getFunction("test7").call();
 		}
 
         if (GUI.Button(new Rect(10, 400, 300, 50), "Click here for detail(in Chinese)"))
