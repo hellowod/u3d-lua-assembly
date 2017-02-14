@@ -1,6 +1,4 @@
 
-
-
 function xx()
 	print(2,path,flag)
 	--multi return for out flag parameter

@@ -1,9 +1,12 @@
-﻿using UnityEngine;
-using System.Collections;
-using System.Collections.Generic;
-using SLua;
+﻿using SLua;
 using System;
+using UnityEngine;
 
+/***
+ * Custom.cs
+ * 
+ * 自定义导出类基本实现方式
+ */ 
 [CustomLuaClassAttribute]
 public class Custom : MonoBehaviour
 {
@@ -13,21 +16,15 @@ public class Custom : MonoBehaviour
 
 	private static Custom ins;
 
-	void Start()
-	{
-		ins = this;
+    void Start()
+    {
+        ins = this;
 
-		lua = new LuaSvr();
-		lua.init(null, () =>
-		{
-			lua.start("custom");
-		});
-	}
-
-	void Update()
-	{
-
-	}
+        lua = new LuaSvr();
+        lua.init(null, () => {
+            lua.start("custom");
+        });
+    }
 
 	// this exported function don't generate stub code if it had MonoPInvokeCallbackAttribute attribute, only register it
 	[MonoPInvokeCallbackAttribute(typeof(LuaCSFunction))]
@@ -52,22 +49,19 @@ public class Custom : MonoBehaviour
 		return 3;
 	}
 
-	public int this[string key]
-	{
-		get
-		{
-			if (key == "test")
-				return v;
-			return 0;
-		}
-		set
-		{
-			if (key == "test")
-			{
-				v = value;
-			}
-		}
-	}
+	public int this[string key] {
+        get {
+            if (key == "test")
+                return v;
+            return 0;
+        }
+        set {
+            if (key == "test") {
+                v = value;
+            }
+        }
+    }
+
 	public string getTypeName(Type t)
 	{
 		return t.Name;
@@ -75,9 +69,13 @@ public class Custom : MonoBehaviour
 }
 
 
+/***
+ * 重载默认库函数方式（基于C#的属性标签方式，相比tolua方便很多）
+ * 
+ */ 
 namespace SLua
 {
-	[OverloadLuaClass(typeof(GameObject))]
+    [OverloadLuaClass(typeof(GameObject))]
 	public class MyGameObject : LuaObject {
 		[MonoPInvokeCallbackAttribute(typeof(LuaCSFunction))]
 		public static int Find_s(IntPtr l) {

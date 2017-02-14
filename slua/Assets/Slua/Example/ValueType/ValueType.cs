@@ -1,21 +1,15 @@
-﻿using UnityEngine;
-using System.Collections;
-using SLua;
+﻿using SLua;
+using UnityEngine;
 
-public class ValueType : MonoBehaviour {
+public class ValueType : MonoBehaviour
+{
+    private LuaSvr l;
 
-    LuaSvr l;
-	// Use this for initialization
-	void Start () {
+    void Start()
+    {
         l = new LuaSvr();
-		l.init(null, () =>
-		{
-			l.start("valuetype");
-		});
-	}
-	
-	// Update is called once per frame
-	void Update () {
-	
-	}
+        l.init(null, () => {
+            l.start("valuetype");
+        });
+    }
 }

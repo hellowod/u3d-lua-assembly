@@ -1,17 +1,15 @@
-﻿using UnityEngine;
-using System.Collections;
-using SLua;
+﻿using SLua;
+using UnityEngine;
+
 public class VarObj : MonoBehaviour
 {
+    private LuaSvr l;
 
-	LuaSvr l;
-	// Use this for initialization
-	void Start()
-	{
-		l = new LuaSvr();
-		l.init(null, () =>
-		{
-			l.start("varobj");
-		});
-	}
+    void Start()
+    {
+        l = new LuaSvr();
+        l.init(null, () => {
+            l.start("varobj");
+        });
+    }
 }

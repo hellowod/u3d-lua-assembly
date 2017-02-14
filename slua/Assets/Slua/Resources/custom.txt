@@ -4,8 +4,7 @@ GameObject = UnityEngine.MonoBehaviour
 
 function main()
 
-
-	local s,c=Custom.staticCustom();
+	local s,c=Custom.staticCustom()
 	print(s,c)
 
 	local a,b,x=c:instanceCustom()
