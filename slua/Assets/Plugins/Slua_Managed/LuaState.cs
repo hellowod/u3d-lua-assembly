@@ -221,15 +221,14 @@ namespace SLua
 		}
 
 
-		public object call()
-		{
-			int error = LuaObject.pushTry(state.L);
-			if (innerCall(0, error))
-			{
-				return state.topObjects(error - 1);
-			}
-			return null;
-		}
+        public object call()
+        {
+            int error = LuaObject.pushTry(state.L);
+            if (innerCall(0, error)) {
+                return state.topObjects(error - 1);
+            }
+            return null;
+        }
 
 		public object call(params object[] args)
 		{
@@ -297,8 +296,6 @@ namespace SLua
 
 	public class LuaTable : LuaVar, IEnumerable<LuaTable.TablePair>
 	{
-
-
 		public struct TablePair
 		{
 			public object key;
@@ -443,10 +440,6 @@ namespace SLua
 
 	}
 
-
-
-
-
 	public class LuaState : IDisposable
 	{
 		IntPtr l_;
@@ -548,7 +541,9 @@ namespace SLua
 
 			L = LuaDLL.luaL_newstate();
 			statemap[L] = this;
-			if (main == null) main = this;
+            if (main == null) {
+                main = this;
+            }
 
 			refQueue = new Queue<UnrefPair>();
 			ObjectCache.make(L);
@@ -899,15 +894,15 @@ end
 		public object doFile(string fn)
 		{
 			byte[] bytes = loadFile(fn);
-			if (bytes == null)
-			{
+			if (bytes == null) {
 				Logger.LogError(string.Format("Can't find {0}", fn));
 				return null;
 			}
 
 			object obj;
-			if (doBuffer(bytes, "@" + fn, out obj))
-				return obj;
+			if (doBuffer(bytes, "@" + fn, out obj)) {
+                return obj;
+            }
 			return null;
 		}
 
@@ -927,55 +922,48 @@ end
             return bytes;
 	    }
 
-		public bool doBuffer(byte[] bytes, string fn, out object ret)
-        {        
+        public bool doBuffer(byte[] bytes, string fn, out object ret)
+        {
             // ensure no utf-8 bom, LuaJIT can read BOM, but Lua cannot!
-		    bytes = CleanUTF8Bom(bytes);
+            bytes = CleanUTF8Bom(bytes);
             ret = null;
-			int errfunc = LuaObject.pushTry(L);
-			if (LuaDLL.luaL_loadbuffer(L, bytes, bytes.Length, fn) == 0)
-			{
-				if (LuaDLL.lua_pcall(L, 0, LuaDLL.LUA_MULTRET, errfunc) != 0)
-				{
-					LuaDLL.lua_pop(L, 2);
-					return false;
-				}
-				LuaDLL.lua_remove(L, errfunc); // pop error function
-				ret = topObjects(errfunc - 1);
-				return true;
-			}
-			string err = LuaDLL.lua_tostring(L, -1);
-			LuaDLL.lua_pop(L, 2);
-			throw new Exception(err);
-		}
+            int errfunc = LuaObject.pushTry(L);
+            if (LuaDLL.luaL_loadbuffer(L, bytes, bytes.Length, fn) == 0) {
+                if (LuaDLL.lua_pcall(L, 0, LuaDLL.LUA_MULTRET, errfunc) != 0) {
+                    LuaDLL.lua_pop(L, 2);
+                    return false;
+                }
+                LuaDLL.lua_remove(L, errfunc); // pop error function
+                ret = topObjects(errfunc - 1);
+                return true;
+            }
+            string err = LuaDLL.lua_tostring(L, -1);
+            LuaDLL.lua_pop(L, 2);
+            throw new Exception(err);
+        }
 
-		internal static byte[] loadFile(string fn)
-		{
-			try
-			{
-				byte[] bytes;
-				if (loaderDelegate != null)
-					bytes = loaderDelegate(fn);
-				else
-				{
+        internal static byte[] loadFile(string fn)
+        {
+            try {
+                byte[] bytes;
+                if (loaderDelegate != null) {
+                    bytes = loaderDelegate(fn);
+                } else {
 #if !SLUA_STANDALONE
-					fn = fn.Replace(".", "/");
-					TextAsset asset = (TextAsset)Resources.Load(fn);
-					if (asset == null)
-						return null;
-					bytes = asset.bytes;
+                    fn = fn.Replace(".", "/");
+                    TextAsset asset = (TextAsset)Resources.Load(fn);
+                    if (asset == null)
+                        return null;
+                    bytes = asset.bytes;
 #else
 				    bytes = File.ReadAllBytes(fn);
 #endif
-				}
-				return bytes;
-			}
-			catch (Exception e)
-			{
-				throw new Exception(e.Message);
-			}
-		}
-
+                }
+                return bytes;
+            } catch (Exception e) {
+                throw new Exception(e.Message);
+            }
+        }
 
 		internal object getObject(string key)
 		{
@@ -1064,19 +1052,18 @@ end
 			LuaDLL.lua_settop(L, oldTop);
 		}
 
-		internal void setObject(int reference, int index, object o)
-		{
-			if (index >= 1)
-			{
-				int oldTop = LuaDLL.lua_gettop(L);
-				LuaDLL.lua_getref(L, reference);
-				LuaObject.pushVar(L, o);
-				LuaDLL.lua_rawseti(L, -2, index);
-				LuaDLL.lua_settop(L, oldTop);
-				return;
-			}
-			throw new IndexOutOfRangeException();
-		}
+        internal void setObject(int reference, int index, object o)
+        {
+            if (index >= 1) {
+                int oldTop = LuaDLL.lua_gettop(L);
+                LuaDLL.lua_getref(L, reference);
+                LuaObject.pushVar(L, o);
+                LuaDLL.lua_rawseti(L, -2, index);
+                LuaDLL.lua_settop(L, oldTop);
+                return;
+            }
+            throw new IndexOutOfRangeException();
+        }
 
 		internal void setObject(int reference, object field, object o)
 		{
@@ -1088,30 +1075,25 @@ end
 			LuaDLL.lua_settop(L, oldTop);
 		}
 
-		internal object topObjects(int from)
-		{
-			int top = LuaDLL.lua_gettop(L);
-			int nArgs = top - from;
-			if (nArgs == 0)
-				return null;
-			else if (nArgs == 1)
-			{
-				object o = LuaObject.checkVar(L, top);
-				LuaDLL.lua_pop(L, 1);
-				return o;
-			}
-			else
-			{
-				object[] o = new object[nArgs];
-				for (int n = 1; n <= nArgs; n++)
-				{
-					o[n - 1] = LuaObject.checkVar(L, from + n);
-
-				}
-				LuaDLL.lua_settop(L, from);
-				return o;
-			}
-		}
+        internal object topObjects(int from)
+        {
+            int top = LuaDLL.lua_gettop(L);
+            int nArgs = top - from;
+            if (nArgs == 0) {
+                return null;
+            } else if (nArgs == 1) {
+                object o = LuaObject.checkVar(L, top);
+                LuaDLL.lua_pop(L, 1);
+                return o;
+            } else {
+                object[] o = new object[nArgs];
+                for (int n = 1; n <= nArgs; n++) {
+                    o[n - 1] = LuaObject.checkVar(L, from + n);
+                }
+                LuaDLL.lua_settop(L, from);
+                return o;
+            }
+        }
 
 		object getObject(IntPtr l, int p)
 		{

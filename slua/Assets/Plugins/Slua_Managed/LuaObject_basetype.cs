@@ -386,19 +386,18 @@ namespace SLua
 			return true;
 		}
 
-		static public bool checkType(IntPtr l, int p, out LuaTable t)
-		{
-			if (LuaDLL.lua_isnil(l, p))
-			{
-				t = null;
-				return true;
-			}
-			LuaDLL.luaL_checktype(l, p, LuaTypes.LUA_TTABLE);
-			LuaDLL.lua_pushvalue(l, p);
-			int fref = LuaDLL.luaL_ref(l, LuaIndexes.LUA_REGISTRYINDEX);
-			t = new LuaTable(l, fref);
-			return true;
-		}
+        static public bool checkType(IntPtr l, int p, out LuaTable t)
+        {
+            if (LuaDLL.lua_isnil(l, p)) {
+                t = null;
+                return true;
+            }
+            LuaDLL.luaL_checktype(l, p, LuaTypes.LUA_TTABLE);
+            LuaDLL.lua_pushvalue(l, p);
+            int fref = LuaDLL.luaL_ref(l, LuaIndexes.LUA_REGISTRYINDEX);
+            t = new LuaTable(l, fref);
+            return true;
+        }
 
 		public static void pushValue(IntPtr l, LuaCSFunction f)
 		{

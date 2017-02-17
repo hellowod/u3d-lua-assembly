@@ -36,7 +36,8 @@ namespace SLua
 	using Debug = UnityEngine.Debug;
 #endif
 
-	public enum LuaSvrFlag {
+	public enum LuaSvrFlag
+    {
 		LSF_BASIC = 0,
 		LSF_EXTLIB = 1,
 		LSF_3RDDLL = 2
@@ -46,24 +47,23 @@ namespace SLua
 	{
 		public LuaState luaState;
 #if !SLUA_STANDALONE
-		static LuaSvrGameObject lgo;
+		private static LuaSvrGameObject lgo;
 #endif
-		int errorReported = 0;
+		private int errorReported = 0;
 		public bool inited = false;
+        private volatile int bindProgress = 0;
 
-		public LuaSvr()
+        public LuaSvr()
 		{
-			LuaState luaState = new LuaState();
-            this.luaState = luaState;
-		}
+            this.luaState = new LuaState();
+        }
 
-		private volatile int bindProgress = 0;
-		private void doBind(object state)
-		{
-			IntPtr L = (IntPtr)state;
+        private void doBind(object state)
+        {
+            IntPtr L = (IntPtr)state;
 
             List<Action<IntPtr>> list = new List<Action<IntPtr>>();
-            
+
 #if !SLUA_STANDALONE
 #if USE_STATIC_BINDER
 			Assembly[] ams = AppDomain.CurrentDomain.GetAssemblies();
@@ -109,99 +109,99 @@ namespace SLua
 				list.AddRange(sublist);
 			}
 #else
-		    var assemblyName = "Assembly-CSharp";
+            string assemblyName = "Assembly-CSharp";
             Assembly assembly = Assembly.Load(assemblyName);
-			list.AddRange(getBindList(assembly,"SLua.BindUnity"));
-			list.AddRange(getBindList(assembly,"SLua.BindUnityUI"));
-			list.AddRange(getBindList(assembly,"SLua.BindDll"));
-			list.AddRange(getBindList(assembly,"SLua.BindCustom"));
+            list.AddRange(getBindList(assembly, "SLua.BindUnity"));
+            list.AddRange(getBindList(assembly, "SLua.BindUnityUI"));
+            list.AddRange(getBindList(assembly, "SLua.BindDll"));
+            list.AddRange(getBindList(assembly, "SLua.BindCustom"));
 #endif
 #endif
-			
-			bindProgress = 2;
-			
-			int count = list.Count;
-			for (int n = 0; n < count; n++)
-			{
-				Action<IntPtr> action = list[n];
-				action(L);
-				bindProgress = (int)(((float)n / count) * 98.0) + 2;
-			}
-			
-			bindProgress = 100;
-		}
 
-		Action<IntPtr>[] getBindList(Assembly assembly,string ns) {
-			Type t=assembly.GetType(ns);
-			if(t!=null)
-				return (Action<IntPtr>[]) t.GetMethod("GetBindList").Invoke(null, null);
-			return new Action<IntPtr>[0];
-		}
+            bindProgress = 2;
 
-		
-		public IEnumerator waitForBind(Action<int> tick, Action complete)
-		{
-			int lastProgress = 0;
-			do {
-				if (tick != null)
-					tick (bindProgress);
-				// too many yield return will increase binding time
-				// so check progress and skip odd progress
-				if (lastProgress != bindProgress && bindProgress % 2 == 0)
-				{
-					lastProgress = bindProgress;
-					yield return null;
-				}
-			} while (bindProgress != 100);
-			
-			if (tick != null)
-				tick (bindProgress);
-			
-			complete();
-		}
+            int count = list.Count;
+            for (int n = 0; n < count; n++) {
+                Action<IntPtr> action = list[n];
+                action(L);
+                bindProgress = (int)(((float)n / count) * 98.0) + 2;
+            }
 
-		void doinit(IntPtr L,LuaSvrFlag flag)
-		{
+            bindProgress = 100;
+        }
+
+        private Action<IntPtr>[] getBindList(Assembly assembly, string ns)
+        {
+            Type t = assembly.GetType(ns);
+            if (t != null) {
+                return (Action<IntPtr>[])t.GetMethod("GetBindList").Invoke(null, null);
+            }
+            return new Action<IntPtr>[0];
+        }
+
+        public IEnumerator waitForBind(Action<int> tick, Action complete)
+        {
+            int lastProgress = 0;
+            do {
+                if (tick != null) {
+                    tick(bindProgress);
+                }
+                // too many yield return will increase binding time
+                // so check progress and skip odd progress
+                if (lastProgress != bindProgress && bindProgress % 2 == 0) {
+                    lastProgress = bindProgress;
+                    yield return null;
+                }
+            } while (bindProgress != 100);
+
+            if (tick != null) {
+                tick(bindProgress);
+            }
+            complete();
+        }
+
+        private void doinit(IntPtr L, LuaSvrFlag flag)
+        {
 #if !SLUA_STANDALONE
-			LuaTimer.reg(L);
+            LuaTimer.reg(L);
 #if UNITY_EDITOR
             if (UnityEditor.EditorApplication.isPlaying)
 #endif
-            LuaCoroutine.reg(L, lgo);
+                LuaCoroutine.reg(L, lgo);
 #endif
-			Helper.reg(L);
-			LuaValueType.reg(L);
-			
-			if((flag&LuaSvrFlag.LSF_EXTLIB)!=0)
-				LuaDLL.luaS_openextlibs(L);
-			if((flag&LuaSvrFlag.LSF_3RDDLL)!=0)
-				Lua3rdDLL.open(L);
+            Helper.reg(L);
+            LuaValueType.reg(L);
+
+            if ((flag & LuaSvrFlag.LSF_EXTLIB) != 0) {
+                LuaDLL.luaS_openextlibs(L);
+            }
+            if ((flag & LuaSvrFlag.LSF_3RDDLL) != 0) {
+                Lua3rdDLL.open(L);
+            }
 
 #if !SLUA_STANDALONE
 #if UNITY_EDITOR
-		    if (UnityEditor.EditorApplication.isPlaying)
-		    {
+            if (UnityEditor.EditorApplication.isPlaying) {
 #endif
-            lgo.state = luaState;
-            lgo.onUpdate = this.tick;
-            lgo.init();
+                lgo.state = luaState;
+                lgo.onUpdate = this.tick;
+                lgo.init();
 #if UNITY_EDITOR
-		    }
+            }
 
 #endif
 #endif
 
-                inited = true;
-		}
+            inited = true;
+        }
 
-		void checkTop(IntPtr L)
-		{
-			if (LuaDLL.lua_gettop(luaState.L) != errorReported)
-			{
-				Logger.LogError("Some function not remove temp value from lua stack. You should fix it.");
-				errorReported = LuaDLL.lua_gettop(luaState.L);
-			}
-		}
+        private void checkTop(IntPtr L)
+        {
+            if (LuaDLL.lua_gettop(luaState.L) != errorReported) {
+                Logger.LogError("Some function not remove temp value from lua stack. You should fix it.");
+                errorReported = LuaDLL.lua_gettop(luaState.L);
+            }
+        }
 
 		public void init(Action<int> tick, Action complete, LuaSvrFlag flag=LuaSvrFlag.LSF_BASIC)
         {
@@ -259,18 +259,18 @@ namespace SLua
 
 		public object start(string luaPath)
 		{
-			if (luaPath != null)
-			{
+			if (luaPath != null) {
 				luaState.doFile(luaPath);
 				LuaFunction func = (LuaFunction)luaState["main"];
-				if(func!=null)
-					return func.call();
+                if (func != null) {
+                    return func.call();
+                }
 			}
 			return null;
 		}
 
 #if !SLUA_STANDALONE
-		void tick()
+		private void tick()
 		{
 			if (!inited)
 				return;

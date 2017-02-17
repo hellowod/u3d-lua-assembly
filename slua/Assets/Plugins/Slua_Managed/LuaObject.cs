@@ -1212,92 +1212,70 @@ return index
             }
         }
 
-		static public object checkVar(IntPtr l, int p)
-		{
-			LuaTypes type = LuaDLL.lua_type(l, p);
-			switch (type)
-			{
-				case LuaTypes.LUA_TNUMBER:
-					{
-						return LuaDLL.lua_tonumber(l, p);
-					}
-				case LuaTypes.LUA_TSTRING:
-					{
-						return LuaDLL.lua_tostring(l, p);
-					}
-				case LuaTypes.LUA_TBOOLEAN:
-					{
-						return LuaDLL.lua_toboolean(l, p);
-					}
-				case LuaTypes.LUA_TFUNCTION:
-					{
-						LuaFunction v;
-						LuaObject.checkType(l, p, out v);
-						return v;
-					}
-				case LuaTypes.LUA_TTABLE:
-					{
-						if (isLuaValueType(l, p))
-						{
+        static public object checkVar(IntPtr l, int p)
+        {
+            LuaTypes type = LuaDLL.lua_type(l, p);
+            switch (type) {
+                case LuaTypes.LUA_TNUMBER: {
+                        return LuaDLL.lua_tonumber(l, p);
+                    }
+                case LuaTypes.LUA_TSTRING: {
+                        return LuaDLL.lua_tostring(l, p);
+                    }
+                case LuaTypes.LUA_TBOOLEAN: {
+                        return LuaDLL.lua_toboolean(l, p);
+                    }
+                case LuaTypes.LUA_TFUNCTION: {
+                        LuaFunction v;
+                        LuaObject.checkType(l, p, out v);
+                        return v;
+                    }
+                case LuaTypes.LUA_TTABLE: {
+                        if (isLuaValueType(l, p)) {
 #if !SLUA_STANDALONE
-							if (luaTypeCheck(l, p, "Vector2"))
-							{
-								Vector2 v;
-								checkType(l, p, out v);
-								return v;
-							}
-							else if (luaTypeCheck(l, p, "Vector3"))
-							{
-								Vector3 v;
-								checkType(l, p, out v);
-								return v;
-							}
-							else if (luaTypeCheck(l, p, "Vector4"))
-							{
-								Vector4 v;
-								checkType(l, p, out v);
-								return v;
-							}
-							else if (luaTypeCheck(l, p, "Quaternion"))
-							{
-								Quaternion v;
-								checkType(l, p, out v);
-								return v;
-							}
-							else if (luaTypeCheck(l, p, "Color"))
-							{
-								Color c;
-								checkType(l, p, out c);
-								return c;
-							}
+                            if (luaTypeCheck(l, p, "Vector2")) {
+                                Vector2 v;
+                                checkType(l, p, out v);
+                                return v;
+                            } else if (luaTypeCheck(l, p, "Vector3")) {
+                                Vector3 v;
+                                checkType(l, p, out v);
+                                return v;
+                            } else if (luaTypeCheck(l, p, "Vector4")) {
+                                Vector4 v;
+                                checkType(l, p, out v);
+                                return v;
+                            } else if (luaTypeCheck(l, p, "Quaternion")) {
+                                Quaternion v;
+                                checkType(l, p, out v);
+                                return v;
+                            } else if (luaTypeCheck(l, p, "Color")) {
+                                Color c;
+                                checkType(l, p, out c);
+                                return c;
+                            }
 #endif
-							Logger.LogError("unknown lua value type");
-							return null;
-						}
-						else if (isLuaClass(l, p))
-						{
-							return checkObj(l, p);
-						}
-						else
-						{
-							LuaTable v;
-							checkType(l,p,out v);
-							return v;
-						}
-					}
-				case LuaTypes.LUA_TUSERDATA:
-					return LuaObject.checkObj(l, p);
-                case LuaTypes.LUA_TTHREAD:
-                    {
+                            Logger.LogError("unknown lua value type");
+                            return null;
+                        } else if (isLuaClass(l, p)) {
+                            return checkObj(l, p);
+                        } else {
+                            LuaTable v;
+                            checkType(l, p, out v);
+                            return v;
+                        }
+                    }
+                case LuaTypes.LUA_TUSERDATA:
+                    return LuaObject.checkObj(l, p);
+                case LuaTypes.LUA_TTHREAD: {
                         LuaThread lt;
                         LuaObject.checkType(l, p, out lt);
                         return lt;
                     }
-				default:
-					return null;
-			}
-		}
-
+                default:
+                    return null;
+            }
+        }
 
 		public static void pushValue(IntPtr l, object o)
 		{

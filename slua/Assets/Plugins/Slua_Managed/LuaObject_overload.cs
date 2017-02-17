@@ -88,21 +88,19 @@ namespace SLua
 			return true;
 		}
 
-		static public bool checkParams(IntPtr l, int p, out Vector2[] pars)
-		{
-			int top = LuaDLL.lua_gettop(l);
-			if (top - p >= 0)
-			{
-				pars = new Vector2[top - p + 1];
-				for (int n = p, k = 0; n <= top; n++, k++)
-				{
-					checkType(l, n, out pars[k]);
-				}
-				return true;
-			}
-			pars = new Vector2[0];
-			return true;
-		}
+        static public bool checkParams(IntPtr l, int p, out Vector2[] pars)
+        {
+            int top = LuaDLL.lua_gettop(l);
+            if (top - p >= 0) {
+                pars = new Vector2[top - p + 1];
+                for (int n = p, k = 0; n <= top; n++, k++) {
+                    checkType(l, n, out pars[k]);
+                }
+                return true;
+            }
+            pars = new Vector2[0];
+            return true;
+        }
 
 		public static void pushValue(IntPtr l, RaycastHit2D r)
 		{
@@ -116,18 +114,20 @@ namespace SLua
 
         public static void pushValue(IntPtr l, UnityEngine.AnimationState o)
         {
-            if (o == null)
+            if (o == null) {
                 LuaDLL.lua_pushnil(l);
-            else
+            } else {
                 pushObject(l, o);
+            }
         }
 
         public static void pushValue(IntPtr l, UnityEngine.Object o)
 		{
-			if (o == null)
-				LuaDLL.lua_pushnil(l);
-			else
-				pushObject(l, o);
+			if (o == null) {
+                LuaDLL.lua_pushnil(l);
+            } else {
+                pushObject(l, o);
+            }
 		}
 	
 		public static void pushValue(IntPtr l, Quaternion o)
@@ -140,14 +140,10 @@ namespace SLua
 			LuaDLL.luaS_pushVector2(l, o.x, o.y);
 		}
 
-
-
 		public static void pushValue(IntPtr l, Vector3 o)
 		{
 			LuaDLL.luaS_pushVector3(l, o.x, o.y, o.z);
 		}
-
-
 
 		public static void pushValue(IntPtr l, Vector4 o)
 		{

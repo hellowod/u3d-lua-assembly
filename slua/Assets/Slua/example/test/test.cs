@@ -72,36 +72,34 @@ class Assert{
 public class test : MonoBehaviour {
 
 	private LuaSvr l;
-	void Start()
-	{
-		l = new LuaSvr();
-		l.init(null, () =>{
-			LuaTests t = new LuaTests();
-			t.lua = l.luaState;
-			t.lua.doString ("TestClass=NLuaTest.Mock.TestClass");
+    void Start()
+    {
+        l = new LuaSvr();
+        l.init(null, () => {
+            LuaTests t = new LuaTests();
+            t.lua = l.luaState;
+            t.lua.doString("TestClass=NLuaTest.Mock.TestClass");
 
-			MethodInfo[] methods = t.GetType().GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly);
+            MethodInfo[] methods = t.GetType().GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.DeclaredOnly);
 
-			int pass = 0;
-			int failed = 0;
+            int pass = 0;
+            int failed = 0;
 
-			int i = 0;
-			foreach(MethodInfo m in methods)
-			{
-				++i;
-				try{
-					Debug.Log("start test: " + m.Name);
-					m.Invoke(t, null);
-					++pass;
-				}catch(Exception e)
-				{
-					++failed;
-					Debug.LogError("[" + i + "] test failed: " + m.Name + ", e: "  + e);
-				}
-			}
-			Debug.Log("test done. pass: " + pass + ", failed: " + failed);
-		});
-	}
+            int i = 0;
+            foreach (MethodInfo m in methods) {
+                ++i;
+                try {
+                    Debug.Log("start test: " + m.Name);
+                    m.Invoke(t, null);
+                    ++pass;
+                } catch (Exception e) {
+                    ++failed;
+                    Debug.LogError("[" + i + "] test failed: " + m.Name + ", e: " + e);
+                }
+            }
+            Debug.Log("test done. pass: " + pass + ", failed: " + failed);
+        });
+    }
 
 	
 	public class LuaTests

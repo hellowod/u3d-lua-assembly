@@ -440,7 +440,6 @@ namespace SLua
         public static extern int lua_setmetatable(IntPtr luaState, int objIndex);
 #endif
 
-
         [DllImport(LUADLL, CallingConvention = CallingConvention.Cdecl)]
         public static extern int lua_getmetatable(IntPtr luaState, int objIndex);
 
@@ -570,9 +569,6 @@ namespace SLua
         {
             LuaDLLWrapper.luaS_pushlstring(luaState, str, size);
         }
-
-
-
 
         [DllImport(LUADLL, CallingConvention = CallingConvention.Cdecl)]
         public static extern int luaL_newmetatable(IntPtr luaState, string meta);

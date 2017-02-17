@@ -1,0 +1,42 @@
+import "UnityEngine"
+
+function main()
+    local go=GameObject("luafunction")
+end
+
+--lua函数作为表元素定义和调用
+
+local class={}
+
+--定义有三种方式
+
+--第一种方式
+class.get_name=function(a,b)
+    print(a, b)
+end
+
+--第二种方式
+function class.get_age(a,b)
+    print(a, b)
+end
+
+--第三种方式
+function class:get_main(a,b)
+    print(a, b)
+end
+
+--调用有两种方式
+
+class.get_name("hello", "world")
+class:get_name("hello", "world")
+
+print("=============================")
+
+class.get_age("hello", "world")
+class:get_age("hello", "world")
+
+print("=============================")
+
+class.get_main("hello", "world")
+class:get_main("hello", "world")
+

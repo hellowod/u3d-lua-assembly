@@ -24,7 +24,7 @@ public class Circle : MonoBehaviour
     void Update()
     {
         if (update != null) {
-            update.call(self);
+            //update.call(self);
         }
     }
 }
