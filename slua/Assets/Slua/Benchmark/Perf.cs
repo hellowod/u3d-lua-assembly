@@ -12,8 +12,7 @@ public class Perf : MonoBehaviour
 
 		float start = Time.realtimeSinceStartup;
 		lua = new LuaSvr();
-		lua.init(null, () =>
-		{
+		lua.init(null, () => {
 			Debug.Log ("start cost: " + (Time.realtimeSinceStartup - start));
 
 			var endMem = System.GC.GetTotalMemory (true);
@@ -37,53 +36,46 @@ public class Perf : MonoBehaviour
 
 	void OnGUI()
 	{
-		if (!lua.inited)
+		if (!lua.inited){
 			return;
+		}	
 
-		if (GUI.Button(new Rect(10, 10, 120, 50), "Test1"))
-		{
+		if (GUI.Button(new Rect(10, 10, 120, 50), "Test1")) {
 			logText = "";
 			lua.luaState.getFunction("test1").call();
 		}
 
-		if (GUI.Button(new Rect(10, 100, 120, 50), "Test2"))
-		{
+		if (GUI.Button(new Rect(10, 100, 120, 50), "Test2")) {
 			logText = "";
 			lua.luaState.getFunction("test2").call();
 		}
 
-		if (GUI.Button(new Rect(10, 200, 120, 50), "Test3"))
-		{
+		if (GUI.Button(new Rect(10, 200, 120, 50), "Test3")) {
 			logText = "";
 			lua.luaState.getFunction("test3").call();
 		}
 
-		if (GUI.Button(new Rect(10, 300, 120, 50), "Test4"))
-		{
+		if (GUI.Button(new Rect(10, 300, 120, 50), "Test4")) {
 			logText = "";
 			lua.luaState.getFunction("test4").call();
 		}
 
-		if (GUI.Button(new Rect(200, 10, 120, 50), "Test5"))
-		{
+		if (GUI.Button(new Rect(200, 10, 120, 50), "Test5")) {
 			logText = "";
 			lua.luaState.getFunction("test5").call();
 		}
 
-        if (GUI.Button(new Rect(200, 100, 120, 50), "Test6 jit"))
-        {
+        if (GUI.Button(new Rect(200, 100, 120, 50), "Test6 jit")) {
             logText = "";
             lua.luaState.getFunction("test6").call();
         }
 
-		if (GUI.Button(new Rect(200, 200, 120, 50), "Test6 non-jit"))
-		{
+		if (GUI.Button(new Rect(200, 200, 120, 50), "Test6 non-jit")) {
 			logText = "";
 			lua.luaState.getFunction("test7").call();
 		}
 
-        if (GUI.Button(new Rect(10, 400, 300, 50), "Click here for detail(in Chinese)"))
-		{
+        if (GUI.Button(new Rect(10, 400, 300, 50), "Click here for detail(in Chinese)")) {
 			Application.OpenURL("http://www.sineysoft.com/post/164");
 		}
 
