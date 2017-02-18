@@ -115,63 +115,54 @@ namespace SLua
         }
 
         [MenuItem("SLua/Unity/Make UnityEngine")]
-        static public void Generate()
-		{
-			if (IsCompiling) {
-				return;
-			}
+        public static void Generate()
+        {
+            if (IsCompiling) {
+                return;
+            }
 
-			Assembly assembly = Assembly.Load("UnityEngine");
-			Type[] types = assembly.GetExportedTypes();
-			
-			List<string> uselist;
-			List<string> noUseList;
-			
-			CustomExport.OnGetNoUseList(out noUseList);
-			CustomExport.OnGetUseList(out uselist);
+            Assembly assembly = Assembly.Load("UnityEngine");
+            Type[] types = assembly.GetExportedTypes();
+
+            List<string> uselist;
+            List<string> noUseList;
+
+            CustomExport.OnGetNoUseList(out noUseList);
+            CustomExport.OnGetUseList(out uselist);
 
             // Get use and nouse list from custom export.
             object[] aCustomExport = new object[1];
             InvokeEditorMethod<ICustomExportPost>("OnGetUseList", ref aCustomExport);
-            if (null != aCustomExport[0])
-            {
-                if (null != uselist)
-                {
+            if (null != aCustomExport[0]) {
+                if (null != uselist) {
                     uselist.AddRange((List<string>)aCustomExport[0]);
-                }
-                else
-                {
+                } else {
                     uselist = (List<string>)aCustomExport[0];
                 }
             }
 
             aCustomExport[0] = null;
             InvokeEditorMethod<ICustomExportPost>("OnGetNoUseList", ref aCustomExport);
-            if (null != aCustomExport[0])
-            {
-                if ((null != noUseList))
-                {
+            if (null != aCustomExport[0]) {
+                if ((null != noUseList)) {
                     noUseList.AddRange((List<string>)aCustomExport[0]);
-                }
-                else
-                {
+                } else {
                     noUseList = (List<string>)aCustomExport[0];
                 }
             }
 
             List<Type> exports = new List<Type>();
-			string path = GenPath + "Unity/";
-			foreach (Type t in types)
-			{
-				if (filterType(t, noUseList, uselist) && Generate(t, path))
-					exports.Add(t);
-			}
-			
-			GenerateBind(exports, "BindUnity", 0, path);
-			if(autoRefresh)
-			    AssetDatabase.Refresh();
-			Debug.Log("Generate engine interface finished");
-		}
+            string path = GenPath + "Unity/";
+            foreach (Type t in types) {
+                if (filterType(t, noUseList, uselist) && Generate(t, path))
+                    exports.Add(t);
+            }
+
+            GenerateBind(exports, "BindUnity", 0, path);
+            if (autoRefresh)
+                AssetDatabase.Refresh();
+            Debug.Log("Generate engine interface finished");
+        }
 
 		static bool filterType(Type t, List<string> noUseList, List<string> uselist)
 		{
@@ -481,9 +472,9 @@ namespace SLua
 		
 		static bool Generate(Type t, string ns, string path)
 		{
-			if (t.IsInterface)
-				return false;
-			
+            if (t.IsInterface) {
+                return false;
+            }
 			CodeGenerator cg = new CodeGenerator();
 			cg.givenNamespace = ns;
             cg.path = path;
@@ -678,73 +669,64 @@ namespace SLua
 			}
 			return f;
 		}
-		
-		
-		public bool Generate(Type t)
-		{
-			if (!Directory.Exists(path))
-			{
-				Directory.CreateDirectory(path);
-			}
-			
-			if (!t.IsGenericTypeDefinition && (!IsObsolete(t) && t != typeof(YieldInstruction) && t != typeof(Coroutine))
-			    || (t.BaseType != null && t.BaseType == typeof(System.MulticastDelegate)))
-			{
-				if (t.IsEnum)
-				{
-					StreamWriter file = Begin(t);
-					WriteHead(t, file);
-					RegEnumFunction(t, file);
-					End(file);
-				}
-				else if (t.BaseType == typeof(System.MulticastDelegate))
-				{
-					if (t.ContainsGenericParameters)
-						return false;
 
-					string f = DelegateExportFilename(path, t);
-					
-					StreamWriter file = new StreamWriter(f, false, Encoding.UTF8);
-					file.NewLine = NewLine;
-					WriteDelegate(t, file);
-					file.Close();
-					return false;
-				}
-				else
-				{
-					funcname.Clear();
-					propname.Clear();
-					directfunc.Clear();
-					
-					StreamWriter file = Begin(t);
-					WriteHead(t, file);
-					WriteConstructor(t, file);
-					WriteFunction(t, file,false);
-					WriteFunction(t, file, true);
-					WriteField(t, file);
-					RegFunction(t, file);
-					End(file);
-					
-					if (t.BaseType != null && t.BaseType.Name.Contains("UnityEvent`"))
-					{
-						string basename = "LuaUnityEvent_" + _Name(GenericName(t.BaseType)) + ".cs";
-						string f = path + basename;
-						string checkf = LuaCodeGen.GenPath + "Unity/" + basename;
-						if (!File.Exists(checkf)) // if had exported
-						{
-							file = new StreamWriter(f, false, Encoding.UTF8);
-							file.NewLine = NewLine;
-							WriteEvent(t, file);
-							file.Close();
-						}
-					}
-				}
-				
-				return true;
-			}
-			return false;
-		}
 
+        public bool Generate(Type t)
+        {
+            if (!Directory.Exists(path)) {
+                Directory.CreateDirectory(path);
+            }
+
+            if (!t.IsGenericTypeDefinition && (!IsObsolete(t) && t != typeof(YieldInstruction) && t != typeof(Coroutine))
+                || (t.BaseType != null && t.BaseType == typeof(System.MulticastDelegate))) {
+                if (t.IsEnum) {
+                    StreamWriter file = Begin(t);
+                    WriteHead(t, file);
+                    RegEnumFunction(t, file);
+                    End(file);
+                } else if (t.BaseType == typeof(System.MulticastDelegate)) {
+                    if (t.ContainsGenericParameters)
+                        return false;
+
+                    string f = DelegateExportFilename(path, t);
+
+                    StreamWriter file = new StreamWriter(f, false, Encoding.UTF8);
+                    file.NewLine = NewLine;
+                    WriteDelegate(t, file);
+                    file.Close();
+                    return false;
+                } else {
+                    funcname.Clear();
+                    propname.Clear();
+                    directfunc.Clear();
+
+                    StreamWriter file = Begin(t);
+                    WriteHead(t, file);
+                    WriteConstructor(t, file);
+                    WriteFunction(t, file, false);
+                    WriteFunction(t, file, true);
+                    WriteField(t, file);
+                    RegFunction(t, file);
+                    End(file);
+
+                    if (t.BaseType != null && t.BaseType.Name.Contains("UnityEvent`")) {
+                        string basename = "LuaUnityEvent_" + _Name(GenericName(t.BaseType)) + ".cs";
+                        string f = path + basename;
+                        string checkf = LuaCodeGen.GenPath + "Unity/" + basename;
+                        if (!File.Exists(checkf)) // if had exported
+                        {
+                            file = new StreamWriter(f, false, Encoding.UTF8);
+                            file.NewLine = NewLine;
+                            WriteEvent(t, file);
+                            file.Close();
+                        }
+                    }
+                }
+
+                return true;
+            }
+            return false;
+        }
 
 		void WriteDelegate(Type t, StreamWriter file)
 		{
@@ -1621,137 +1603,126 @@ namespace SLua
 		{
 			Write(file, "[MonoPInvokeCallbackAttribute(typeof(LuaCSFunction))]");
 		}
-		
-		ConstructorInfo[] GetValidConstructor(Type t)
-		{
-			List<ConstructorInfo> ret = new List<ConstructorInfo>();
-			if (t.GetConstructor(Type.EmptyTypes) == null && t.IsAbstract && t.IsSealed)
-				return ret.ToArray();
-			if (t.IsAbstract)
-				return ret.ToArray();
-			if (t.BaseType != null && t.BaseType.Name == "MonoBehaviour")
-				return ret.ToArray();
-			
-			ConstructorInfo[] cons = t.GetConstructors(BindingFlags.Instance | BindingFlags.Public);
-			foreach (ConstructorInfo ci in cons)
-			{
-				if (!IsObsolete(ci) && !DontExport(ci) && !ContainUnsafe(ci))
-					ret.Add(ci);
-			}
-			return ret.ToArray();
-		}
-		
-		bool ContainUnsafe(MethodBase mi)
-		{
-			foreach (ParameterInfo p in mi.GetParameters())
-			{
-				if (p.ParameterType.FullName.Contains("*"))
-					return true;
-			}
-			return false;
-		}
-		
-		bool DontExport(MemberInfo mi)
-		{
-		    var methodString = string.Format("{0}.{1}", mi.DeclaringType, mi.Name);
-		    if (CustomExport.FunctionFilterList.Contains(methodString))
-		        return true;
+
+        private ConstructorInfo[] GetValidConstructor(Type t)
+        {
+            List<ConstructorInfo> ret = new List<ConstructorInfo>();
+            if (t.GetConstructor(Type.EmptyTypes) == null && t.IsAbstract && t.IsSealed) {
+                return ret.ToArray();
+            }
+            if (t.IsAbstract) {
+                return ret.ToArray();
+            }
+            if (t.BaseType != null && t.BaseType.Name == "MonoBehaviour") {
+                return ret.ToArray();
+            }
+            ConstructorInfo[] cons = t.GetConstructors(BindingFlags.Instance | BindingFlags.Public);
+            foreach (ConstructorInfo ci in cons) {
+                if (!IsObsolete(ci) && !DontExport(ci) && !ContainUnsafe(ci)) {
+                    ret.Add(ci);
+                }
+            }
+            return ret.ToArray();
+        }
+
+        private bool ContainUnsafe(MethodBase mi)
+        {
+            foreach (ParameterInfo p in mi.GetParameters()) {
+                if (p.ParameterType.FullName.Contains("*"))
+                    return true;
+            }
+            return false;
+        }
+
+        private bool DontExport(MemberInfo mi)
+        {
+            var methodString = string.Format("{0}.{1}", mi.DeclaringType, mi.Name);
+            if (CustomExport.FunctionFilterList.Contains(methodString))
+                return true;
             // directly ignore any components .ctor
-            if (mi.DeclaringType.IsSubclassOf(typeof(UnityEngine.Component)))
-            {
-                if (mi.MemberType == MemberTypes.Constructor)
-                {
+            if (mi.DeclaringType.IsSubclassOf(typeof(UnityEngine.Component))) {
+                if (mi.MemberType == MemberTypes.Constructor) {
                     return true;
                 }
             }
 
             // Check in custom export function filter list.
             List<object> aFuncFilterList = LuaCodeGen.GetEditorField<ICustomExportPost>("FunctionFilterList");
-            foreach (object aFilterList in aFuncFilterList)
-            {
-                if (((List<string>)aFilterList).Contains(methodString))
-                {
+            foreach (object aFilterList in aFuncFilterList) {
+                if (((List<string>)aFilterList).Contains(methodString)) {
                     return true;
                 }
             }
 
-			return mi.IsDefined(typeof(DoNotToLuaAttribute), false);
-		}
-		
-		
-		private void WriteConstructor(Type t, StreamWriter file)
-		{
-			ConstructorInfo[] cons = GetValidConstructor(t);
-			if (cons.Length > 0)
-			{
-				WriteFunctionAttr(file);
-				Write(file, "static public int constructor(IntPtr l) {");
-				WriteTry(file);
-				if (cons.Length > 1)
-					Write(file, "int argc = LuaDLL.lua_gettop(l);");
-				Write(file, "{0} o;", TypeDecl(t));
-				bool first = true;
-				for (int n = 0; n < cons.Length; n++)
-				{
-					ConstructorInfo ci = cons[n];
-					ParameterInfo[] pars = ci.GetParameters();
-					
-					if (cons.Length > 1)
-					{
-						if (isUniqueArgsCount(cons, ci))
-							Write(file, "{0}(argc=={1}){{", first ? "if" : "else if", ci.GetParameters().Length + 1);
-						else
-							Write(file, "{0}(matchType(l,argc,2{1})){{", first ? "if" : "else if", TypeDecl(pars));
-					}
-					
-					for (int k = 0; k < pars.Length; k++)
-					{
-						ParameterInfo p = pars[k];
-						bool hasParams = p.IsDefined(typeof(ParamArrayAttribute), false);
-						CheckArgument(file, p.ParameterType, k, 2, p.IsOut, hasParams);
-					}
-					Write(file, "o=new {0}({1});", TypeDecl(t), FuncCall(ci));
-					WriteOk(file);
-					if (t.Name == "String") // if export system.string, push string as ud not lua string
-						Write(file, "pushObject(l,o);");
-					else
-						Write(file, "pushValue(l,o);");
-					Write(file, "return 2;");
-					if (cons.Length == 1)
-						WriteCatchExecption(file);
-					Write(file, "}");
-					first = false;
-				}
+            return mi.IsDefined(typeof(DoNotToLuaAttribute), false);
+        }
 
-				if (cons.Length > 1)
-				{
-					if(t.IsValueType)
-					{
-						Write(file, "{0}(argc=={1}){{", first ? "if" : "else if", 0);
-						Write(file, "o=new {0}();", FullName(t));
-						Write(file, "pushValue(l,true);");
-						Write(file, "pushObject(l,o);");
-						Write(file, "return 2;");
-						Write(file, "}");
-					}
+        private void WriteConstructor(Type t, StreamWriter file)
+        {
+            ConstructorInfo[] cons = GetValidConstructor(t);
+            if (cons.Length > 0) {
+                WriteFunctionAttr(file);
+                Write(file, "static public int constructor(IntPtr l) {");
+                WriteTry(file);
+                if (cons.Length > 1)
+                    Write(file, "int argc = LuaDLL.lua_gettop(l);");
+                Write(file, "{0} o;", TypeDecl(t));
+                bool first = true;
+                for (int n = 0; n < cons.Length; n++) {
+                    ConstructorInfo ci = cons[n];
+                    ParameterInfo[] pars = ci.GetParameters();
 
-					Write(file, "return error(l,\"New object failed.\");");
-					WriteCatchExecption(file);
-					Write(file, "}");
-				}
-			}
-			else if (t.IsValueType) // default constructor
-			{
-				WriteFunctionAttr(file);
-				Write(file, "static public int constructor(IntPtr l) {");
-				WriteTry(file);
-				Write(file, "{0} o;", FullName(t));
-				Write(file, "o=new {0}();", FullName(t));
-				WriteReturn(file,"o");
-				WriteCatchExecption(file);
-				Write(file, "}");
-			}
-		}
+                    if (cons.Length > 1) {
+                        if (isUniqueArgsCount(cons, ci))
+                            Write(file, "{0}(argc=={1}){{", first ? "if" : "else if", ci.GetParameters().Length + 1);
+                        else
+                            Write(file, "{0}(matchType(l,argc,2{1})){{", first ? "if" : "else if", TypeDecl(pars));
+                    }
+
+                    for (int k = 0; k < pars.Length; k++) {
+                        ParameterInfo p = pars[k];
+                        bool hasParams = p.IsDefined(typeof(ParamArrayAttribute), false);
+                        CheckArgument(file, p.ParameterType, k, 2, p.IsOut, hasParams);
+                    }
+                    Write(file, "o=new {0}({1});", TypeDecl(t), FuncCall(ci));
+                    WriteOk(file);
+                    if (t.Name == "String") // if export system.string, push string as ud not lua string
+                        Write(file, "pushObject(l,o);");
+                    else
+                        Write(file, "pushValue(l,o);");
+                    Write(file, "return 2;");
+                    if (cons.Length == 1)
+                        WriteCatchExecption(file);
+                    Write(file, "}");
+                    first = false;
+                }
+
+                if (cons.Length > 1) {
+                    if (t.IsValueType) {
+                        Write(file, "{0}(argc=={1}){{", first ? "if" : "else if", 0);
+                        Write(file, "o=new {0}();", FullName(t));
+                        Write(file, "pushValue(l,true);");
+                        Write(file, "pushObject(l,o);");
+                        Write(file, "return 2;");
+                        Write(file, "}");
+                    }
+
+                    Write(file, "return error(l,\"New object failed.\");");
+                    WriteCatchExecption(file);
+                    Write(file, "}");
+                }
+            } else if (t.IsValueType) {
+                // default constructor
+                WriteFunctionAttr(file);
+                Write(file, "static public int constructor(IntPtr l) {");
+                WriteTry(file);
+                Write(file, "{0} o;", FullName(t));
+                Write(file, "o=new {0}();", FullName(t));
+                WriteReturn(file, "o");
+                WriteCatchExecption(file);
+                Write(file, "}");
+            }
+        }
 
 		void WriteOk(StreamWriter file)
 		{
