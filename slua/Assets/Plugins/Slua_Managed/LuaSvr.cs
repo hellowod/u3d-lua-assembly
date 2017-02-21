@@ -117,7 +117,6 @@ namespace SLua
             list.AddRange(getBindList(assembly, "SLua.BindCustom"));
 #endif
 #endif
-
             bindProgress = 2;
 
             int count = list.Count;
@@ -191,7 +190,6 @@ namespace SLua
 
 #endif
 #endif
-
             inited = true;
         }
 
@@ -203,23 +201,22 @@ namespace SLua
             }
         }
 
-		public void init(Action<int> tick, Action complete, LuaSvrFlag flag=LuaSvrFlag.LSF_BASIC)
+        public void init(Action<int> tick, Action complete, LuaSvrFlag flag = LuaSvrFlag.LSF_BASIC)
         {
 #if !SLUA_STANDALONE
-		    if (lgo == null
+            if (lgo == null
 #if UNITY_EDITOR
                 && UnityEditor.EditorApplication.isPlaying
 #endif
-                )
-		    {
+                ) {
                 GameObject go = new GameObject("LuaSvrProxy");
                 lgo = go.AddComponent<LuaSvrGameObject>();
                 GameObject.DontDestroyOnLoad(go);
-		        
-		    }
+
+            }
 #endif
             IntPtr L = luaState.L;
-			LuaObject.init(L);
+            LuaObject.init(L);
 
 #if SLUA_STANDALONE
             doBind(L);
@@ -227,63 +224,56 @@ namespace SLua
 		    complete();
             checkTop(L);
 #else
-			
-
-			// be caurefull here, doBind Run in another thread
-			// any code access unity interface will cause deadlock.
-			// if you want to debug bind code using unity interface, need call doBind directly, like:
-			// doBind(L);
+            // be caurefull here, doBind Run in another thread
+            // any code access unity interface will cause deadlock.
+            // if you want to debug bind code using unity interface, need call doBind directly, like:
+            // doBind(L);
 #if UNITY_EDITOR
-		    if (!UnityEditor.EditorApplication.isPlaying)
-		    {
-		        doBind(L);
-		        doinit(L, flag);
-		        complete();
-		        checkTop(L);
-		    }
-		    else
-		    {
+            if (!UnityEditor.EditorApplication.isPlaying) {
+                doBind(L);
+                doinit(L, flag);
+                complete();
+                checkTop(L);
+            } else {
 #endif
-		        ThreadPool.QueueUserWorkItem(doBind, L);
-		        lgo.StartCoroutine(waitForBind(tick, () =>
-		        {
-		            doinit(L, flag);
-		            complete();
-		            checkTop(L);
-		        }));
+                ThreadPool.QueueUserWorkItem(doBind, L);
+                lgo.StartCoroutine(waitForBind(tick, () => {
+                    doinit(L, flag);
+                    complete();
+                    checkTop(L);
+                }));
 #if UNITY_EDITOR
-		    }
-#endif
-#endif
             }
+#endif
+#endif
+        }
 
-		public object start(string luaPath)
-		{
-			if (luaPath != null) {
-				luaState.doFile(luaPath);
-				LuaFunction func = (LuaFunction)luaState["main"];
-                if (func != null) {
-                    return func.call();
-                }
-			}
-			return null;
-		}
+        public object start(string lua)
+        {
+            if (string.IsNullOrEmpty(lua)) {
+                return null;
+            }
+            luaState.doFile(lua);
+            LuaFunction func = (LuaFunction)luaState["main"];
+            if (func != null) {
+                return func.call();
+            }
+            return null;
+        }
 
 #if !SLUA_STANDALONE
-		private void tick()
-		{
-			if (!inited)
-				return;
-
-			if (LuaDLL.lua_gettop(luaState.L) != errorReported)
-			{
-				errorReported = LuaDLL.lua_gettop(luaState.L);
-				Logger.LogError(string.Format("Some function not remove temp value({0}) from lua stack. You should fix it.",LuaDLL.luaL_typename(luaState.L,errorReported)));
-			}
-
-			luaState.checkRef();
-			LuaTimer.tick(Time.deltaTime);
-		}
+        private void tick()
+        {
+            if (!inited) {
+                return;
+            }
+            if (LuaDLL.lua_gettop(luaState.L) != errorReported) {
+                errorReported = LuaDLL.lua_gettop(luaState.L);
+                Logger.LogError(string.Format("Some function not remove temp value({0}) from lua stack. You should fix it.", LuaDLL.luaL_typename(luaState.L, errorReported)));
+            }
+            luaState.checkRef();
+            LuaTimer.tick(Time.deltaTime);
+        }
 #endif
 	}
 }

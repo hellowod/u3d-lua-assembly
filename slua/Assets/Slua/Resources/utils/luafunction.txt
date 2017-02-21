@@ -2,6 +2,10 @@ import "UnityEngine"
 
 function main()
     local go=GameObject("luafunction")
+	local bc=go:AddComponent(BoxCollider)
+	bc.isTrigger = true
+	bc.enabled = false
+	print(bc.isTrigger)
 end
 
 --lua函数作为表元素定义和调用

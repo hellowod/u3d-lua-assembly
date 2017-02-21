@@ -61,7 +61,8 @@ function class:init(count)
 	end
 end
 
-function class:update() -- gc alloc is zero
+-- gc alloc is zero
+function class:update() 
 	
 	for i,v in ipairs(self.cubes) do
 		local offset = i%2==1 and 5 or -5
