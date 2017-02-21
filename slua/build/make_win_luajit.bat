@@ -42,5 +42,5 @@ cd ..\..
 goto :eof
 
 :missing
-echo Can't find Visual Studio 2013.
+echo Can't find Visual Studio 2015.
 goto :eof
