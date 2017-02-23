@@ -31,6 +31,7 @@ public class HotfixTest : MonoBehaviour {
                         print('<<<<<<<<Update in lua, tick = ' .. self.tick)
                     end
                 end)
+                print(xlua.abaojin)
             ");
         }
     }

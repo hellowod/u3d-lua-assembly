@@ -392,6 +392,8 @@ namespace XLua
             local import_type = xlua.import_type
             local load_assembly = xlua.load_assembly
 
+            xlua.abaojin = 8888.6666
+
             function metatable:__index(key) 
                 local fqn = rawget(self,'.fqn')
                 fqn = ((fqn and fqn .. '.') or '') .. key
