@@ -520,27 +520,25 @@ return index
 			LuaDLL.lua_newtable(l);
 		}
 
-		public static void newTypeTable(IntPtr l, string name)
-		{
-			string[] subt = name.Split('.');
+        public static void newTypeTable(IntPtr l, string name)
+        {
+            string[] subt = name.Split('.');
 
-			LuaDLL.lua_pushglobaltable(l);
+            LuaDLL.lua_pushglobaltable(l);
 
-			foreach(string t in subt)
-			{
-				LuaDLL.lua_pushstring(l, t);
-				LuaDLL.lua_rawget(l, -2);
-				if (LuaDLL.lua_isnil(l, -1))
-				{
-					LuaDLL.lua_pop(l, 1);
-					LuaDLL.lua_createtable(l, 0, 0);
-					LuaDLL.lua_pushstring(l, t);
-					LuaDLL.lua_pushvalue(l, -2);
-					LuaDLL.lua_rawset(l, -4);
-				}
-				LuaDLL.lua_remove(l, -2);
-			}
-		}
+            foreach (string t in subt) {
+                LuaDLL.lua_pushstring(l, t);
+                LuaDLL.lua_rawget(l, -2);
+                if (LuaDLL.lua_isnil(l, -1)) {
+                    LuaDLL.lua_pop(l, 1);
+                    LuaDLL.lua_createtable(l, 0, 0);
+                    LuaDLL.lua_pushstring(l, t);
+                    LuaDLL.lua_pushvalue(l, -2);
+                    LuaDLL.lua_rawset(l, -4);
+                }
+                LuaDLL.lua_remove(l, -2);
+            }
+        }
 
 		public static void createTypeMetatable(IntPtr l, Type self)
 		{
@@ -552,58 +550,52 @@ return index
 			createTypeMetatable(l, con, self, null);
 		}
 
-        static void checkMethodValid(LuaCSFunction f)
+        private static void checkMethodValid(LuaCSFunction f)
         {
 #if UNITY_EDITOR
-            if (f != null && !Attribute.IsDefined(f.Method, typeof(MonoPInvokeCallbackAttribute)))
-            {
-				Logger.LogError(string.Format("MonoPInvokeCallbackAttribute not defined for LuaCSFunction {0}.", f.Method));
+            if (f != null && !Attribute.IsDefined(f.Method, typeof(MonoPInvokeCallbackAttribute))) {
+                Logger.LogError(string.Format("MonoPInvokeCallbackAttribute not defined for LuaCSFunction {0}.", f.Method));
             }
 #endif
         }
 
-		public static void createTypeMetatable(IntPtr l, LuaCSFunction con, Type self, Type parent)
-		{
-			checkMethodValid(con);
+        public static void createTypeMetatable(IntPtr l, LuaCSFunction con, Type self, Type parent)
+        {
+            checkMethodValid(con);
 
-			// set parent
-			bool parentSet = false;
-			LuaDLL.lua_pushstring(l, "__parent");
-			while (parent != null && parent != typeof(object) && parent != typeof(ValueType))
-			{
-				LuaDLL.luaL_getmetatable(l, ObjectCache.getAQName(parent));
-				// if parentType is not exported to lua
-				if (LuaDLL.lua_isnil(l, -1))
-				{
-					LuaDLL.lua_pop(l, 1);
-					parent = parent.BaseType;
-				}
-				else
-				{
-					LuaDLL.lua_rawset(l, -3);
+            // set parent
+            bool parentSet = false;
+            LuaDLL.lua_pushstring(l, "__parent");
+            while (parent != null && parent != typeof(object) && parent != typeof(ValueType)) {
+                LuaDLL.luaL_getmetatable(l, ObjectCache.getAQName(parent));
+                // if parentType is not exported to lua
+                if (LuaDLL.lua_isnil(l, -1)) {
+                    LuaDLL.lua_pop(l, 1);
+                    parent = parent.BaseType;
+                } else {
+                    LuaDLL.lua_rawset(l, -3);
 
-					LuaDLL.lua_pushstring(l, "__parent");
-					LuaDLL.luaL_getmetatable(l, parent.FullName);
-					LuaDLL.lua_rawset(l, -4);
+                    LuaDLL.lua_pushstring(l, "__parent");
+                    LuaDLL.luaL_getmetatable(l, parent.FullName);
+                    LuaDLL.lua_rawset(l, -4);
 
-					parentSet = true;
-					break;
-				}
-			}
+                    parentSet = true;
+                    break;
+                }
+            }
 
-			if(!parentSet)
-			{
-				LuaDLL.luaL_getmetatable(l, "__luabaseobject");
-				LuaDLL.lua_rawset(l, -3);
-			}
+            if (!parentSet) {
+                LuaDLL.luaL_getmetatable(l, "__luabaseobject");
+                LuaDLL.lua_rawset(l, -3);
+            }
 
-			completeInstanceMeta(l, self);
-			completeTypeMeta(l, con, self);
+            completeInstanceMeta(l, self);
+            completeTypeMeta(l, con, self);
 
-			LuaDLL.lua_pop(l, 1); // pop type Table
-		}
+            LuaDLL.lua_pop(l, 1); // pop type Table
+        }
 
-		static void completeTypeMeta(IntPtr l, LuaCSFunction con, Type self)
+		private static void completeTypeMeta(IntPtr l, LuaCSFunction con, Type self)
 		{
 
 			LuaDLL.lua_pushstring(l, ObjectCache.getAQName(self));
@@ -672,19 +664,18 @@ return index
 			LuaDLL.lua_setfield(l, LuaIndexes.LUA_REGISTRYINDEX,  ObjectCache.getAQName(self));
 		}
 
-
-		public static bool isImplByLua(Type t)
-		{
+        public static bool isImplByLua(Type t)
+        {
 #if !SLUA_STANDALONE
-			return t == typeof(Color)
-				|| t == typeof(Vector2)
-				|| t == typeof(Vector3)
-				|| t == typeof(Vector4)
-				|| t == typeof(Quaternion);
+            return t == typeof(Color)
+                || t == typeof(Vector2)
+                || t == typeof(Vector3)
+                || t == typeof(Vector4)
+                || t == typeof(Quaternion);
 #else
 		    return false;
 #endif
-		}
+        }
 
 
 		public static void reg(IntPtr l, LuaCSFunction func, string ns)
@@ -697,20 +688,19 @@ return index
 			LuaDLL.lua_pop(l, 1);
 		}
 
-		protected static void addMember(IntPtr l, LuaCSFunction func)
-		{
+        protected static void addMember(IntPtr l, LuaCSFunction func)
+        {
             checkMethodValid(func);
 
-			pushValue(l, func);
-			string name = func.Method.Name;
-			if (name.EndsWith("_s"))
-			{
-				name = name.Substring(0, name.Length - 2);
-				LuaDLL.lua_setfield(l, -3, name);
-			}
-			else
-				LuaDLL.lua_setfield(l, -2, name);
-		}
+            pushValue(l, func);
+            string name = func.Method.Name;
+            if (name.EndsWith("_s")) {
+                name = name.Substring(0, name.Length - 2);
+                LuaDLL.lua_setfield(l, -3, name);
+            } else {
+                LuaDLL.lua_setfield(l, -2, name);
+            }
+        }
 
 		protected static void addMember(IntPtr l, LuaCSFunction func, bool instance)
 		{
