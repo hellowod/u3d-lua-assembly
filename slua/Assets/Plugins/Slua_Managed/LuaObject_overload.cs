@@ -33,7 +33,6 @@ namespace SLua
 
 	public partial class LuaObject
 	{
-
 		static public bool checkType(IntPtr l, int p, out Vector4 v)
 		{
 			float x, y, z, w;

@@ -1,4 +1,7 @@
-:: testing
+############################################
+# 编译lua脚本-(暂时使用不了)
+############################################
+
 
 @echo off
 copy /Y slua.c luajit-2.1.0\src\
@@ -26,21 +29,23 @@ else (
 
 call "%ENV32%"
 echo Swtich to x86 build env
-cd luajit-2.0.4\src
+cd luajit-2.1.0\src
 call msvcbuild.bat
-copy /Y lua51.dll ..\..\..\Assets\Plugins\x86\slua.dll
+md ..\..\plugin_lua\Plugins\x86
+copy /Y lua51.dll ..\..\plugin_lua\Plugins\x86\slua.dll
 cd ..\..
 
 call "%ENV64%"
 echo Swtich to x64 build env
-cd luajit-2.0.4\src
+cd luajit-2.1.0\src
 call msvcbuild.bat
-copy /Y lua51.dll ..\..\..\Assets\Plugins\x64\slua.dll
+md ..\..\plugin_lua\Plugins\x86_64
+copy /Y lua51.dll ..\..\plugin_lua\Plugins\x86_64\slua.dll
 cd ..\..
 
 
 goto :eof
 
 :missing
-echo Can't find Visual Studio 2013.
+echo Can't find Visual Studio 2015.
 goto :eof
