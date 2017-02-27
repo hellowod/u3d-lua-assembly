@@ -13,7 +13,11 @@ public class Helloworld : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
         LuaEnv luaenv = new LuaEnv();
-        luaenv.DoString("CS.UnityEngine.Debug.Log('hello world')");
+        luaenv.DoString(
+            "CS.UnityEngine.Debug.Log('hello world')" +
+            "local go=CS.UnityEngine.GameObject('luago')" +
+            "go:AddComponent(typeof(CS.UnityEngine.BoxCollider))"
+            );
         luaenv.Dispose();
 	}
 	

@@ -95,18 +95,16 @@ namespace XLua
         internal ObjectCasters objectCasters;
 
         internal readonly ObjectPool objects = new ObjectPool();
-        //public readonly Dictionary<int, object> objects = new Dictionary<int, object>();
-        // object to object #
-        //Fix bug by john, struct equals is by value, blow will print
-        //local v1=Vector3(1,1,1) 
-        //local v2=Vector3(1,1,1) 
-        //v1.x = 100 
-        //print(v1.x, v2.x) 
+
         internal readonly Dictionary<object, int> reverseMap = new Dictionary<object, int>(new ReferenceEqualsComparer());
 		internal LuaEnv luaEnv;
 		internal StaticLuaCallbacks metaFunctions;
 		internal List<Assembly> assemblies;
-		private LuaCSFunction importTypeFunction,loadAssemblyFunction, castFunction;
+
+		private LuaCSFunction importTypeFunction;
+        private LuaCSFunction loadAssemblyFunction;
+        private LuaCSFunction castFunction;
+
         //延迟加载
         private readonly Dictionary<Type, Action<RealStatePtr>> delayWrap = new Dictionary<Type, Action<RealStatePtr>>();
 
@@ -114,6 +112,8 @@ namespace XLua
 
         //无法访问的类，比如声明成internal，可以用其接口、基类的生成代码来访问
         private readonly Dictionary<Type, Type> aliasCfg = new Dictionary<Type, Type>();
+
+        public int cacheRef;
 
         public void DelayWrapLoader(Type type, Action<RealStatePtr> loader)
         {
@@ -136,62 +136,52 @@ namespace XLua
 
             Action<RealStatePtr> loader;
             int top = LuaAPI.lua_gettop(L);
-            if (delayWrap.TryGetValue(type, out loader))
-            {
+            if (delayWrap.TryGetValue(type, out loader)) {
                 delayWrap.Remove(type);
                 loader(L);
-            }
-            else
-            {
+            } else {
                 Utils.ReflectionWrap(L, type);
 #if NOT_GEN_WARNING
                 UnityEngine.Debug.LogWarning(string.Format("{0} not gen, using reflection instead", type));
 #endif
             }
-            if (top != LuaAPI.lua_gettop(L))
-            {
+            if (top != LuaAPI.lua_gettop(L)) {
                 throw new Exception("top change, before:" + top + ", after:" + LuaAPI.lua_gettop(L));
             }
 
-            foreach (var nested_type in type.GetNestedTypes())
-            {
+            foreach (var nested_type in type.GetNestedTypes()) {
                 if ((!nested_type.IsAbstract && typeof(Delegate).IsAssignableFrom(nested_type))
-                    || nested_type.IsGenericTypeDefinition)
-                {
+                    || nested_type.IsGenericTypeDefinition) {
                     continue;
                 }
                 TryDelayWrapLoader(L, nested_type);
             }
-            
+
             return true;
         }
-        
+
         public void Alias(Type type, string alias)
         {
             Type alias_type = FindType(alias);
-            if (alias_type == null)
-            {
+            if (alias_type == null) {
                 throw new ArgumentException("Can not find " + alias);
             }
             aliasCfg[alias_type] = type;
         }
 
-        public int cacheRef;
-
-        public ObjectTranslator(LuaEnv luaenv,RealStatePtr L)
-		{
+        public ObjectTranslator(LuaEnv luaenv, RealStatePtr L)
+        {
             assemblies = new List<Assembly>();
 
-            foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies())
-            {
+            foreach (Assembly assembly in AppDomain.CurrentDomain.GetAssemblies()) {
                 assemblies.Add(assembly);
             }
 
-			this.luaEnv=luaenv;
+            this.luaEnv = luaenv;
             objectCasters = new ObjectCasters(this);
             objectCheckers = new ObjectCheckers(this);
             methodWrapsCache = new MethodWrapsCache(this, objectCheckers, objectCasters);
-			metaFunctions=new StaticLuaCallbacks();
+            metaFunctions = new StaticLuaCallbacks();
 
             importTypeFunction = new LuaCSFunction(StaticLuaCallbacks.ImportType);
             loadAssemblyFunction = new LuaCSFunction(StaticLuaCallbacks.LoadAssembly);
@@ -208,7 +198,8 @@ namespace XLua
             initCSharpCallLua();
         }
 
-        enum LOGLEVEL{
+        enum LOGLEVEL
+        {
             NO,
             INFO,
             WARN,
@@ -241,51 +232,41 @@ namespace XLua
         {
             delegate_birdge_type = typeof(DelegateBridge);
 #if UNITY_EDITOR
-            if (!DelegateBridge.Gen_Flag)
-            {
+            if (!DelegateBridge.Gen_Flag) {
                 List<Type> cs_call_lua = new List<Type>();
-                foreach (var type in Utils.GetAllTypes())
-                {
-                    if (!type.IsInterface && typeof(GenConfig).IsAssignableFrom(type))
-                    {
+                foreach (var type in Utils.GetAllTypes()) {
+                    if (!type.IsInterface && typeof(GenConfig).IsAssignableFrom(type)) {
                         var cfg = Activator.CreateInstance(type) as GenConfig;
-                        if (cfg.CSharpCallLua != null)
-                        {
+                        if (cfg.CSharpCallLua != null) {
                             cs_call_lua.AddRange(cfg.CSharpCallLua);
                         }
-                    }
-                    else if(type.IsDefined(typeof(CSharpCallLuaAttribute), false))
-                    {
+                    } else if (type.IsDefined(typeof(CSharpCallLuaAttribute), false)) {
                         cs_call_lua.Add(type);
                     }
 
                     if (!type.IsAbstract || !type.IsSealed) continue;
 
                     var fields = type.GetFields(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
-                    for (int i = 0; i < fields.Length; i++)
-                    {
+                    for (int i = 0; i < fields.Length; i++) {
                         var field = fields[i];
-                        if (field.IsDefined(typeof(CSharpCallLuaAttribute), false) && (typeof(IEnumerable<Type>)).IsAssignableFrom(field.FieldType))
-                        {
+                        if (field.IsDefined(typeof(CSharpCallLuaAttribute), false) && (typeof(IEnumerable<Type>)).IsAssignableFrom(field.FieldType)) {
                             cs_call_lua.AddRange(field.GetValue(null) as IEnumerable<Type>);
                         }
                     }
 
                     var props = type.GetProperties(BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
-                    for (int i = 0; i < props.Length; i++)
-                    {
+                    for (int i = 0; i < props.Length; i++) {
                         var prop = props[i];
-                        if (prop.IsDefined(typeof(CSharpCallLuaAttribute), false) && (typeof(IEnumerable<Type>)).IsAssignableFrom(prop.PropertyType))
-                        {
+                        if (prop.IsDefined(typeof(CSharpCallLuaAttribute), false) && (typeof(IEnumerable<Type>)).IsAssignableFrom(prop.PropertyType)) {
                             cs_call_lua.AddRange(prop.GetValue(null, null) as IEnumerable<Type>);
                         }
                     }
                 }
                 IEnumerable<IGrouping<MethodInfo, Type>> groups = (from type in cs_call_lua
-                              where typeof(Delegate).IsAssignableFrom(type)
-                              select type).GroupBy(t => t.GetMethod("Invoke"), new CompareByArgRet());
+                                                                   where typeof(Delegate).IsAssignableFrom(type)
+                                                                   select type).GroupBy(t => t.GetMethod("Invoke"), new CompareByArgRet());
 
-                ce.SetGenInterfaces(cs_call_lua.Where(type=>type.IsInterface).ToList());
+                ce.SetGenInterfaces(cs_call_lua.Where(type => type.IsInterface).ToList());
                 delegate_birdge_type = ce.EmitDelegateImpl(groups);
             }
 #endif

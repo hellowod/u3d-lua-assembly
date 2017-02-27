@@ -98,7 +98,6 @@ namespace XLua
 #endif
         }
 
-
         public T GetInPath<T>(string path)
         {
 #if THREAD_SAFT || HOTFIX_ENABLE

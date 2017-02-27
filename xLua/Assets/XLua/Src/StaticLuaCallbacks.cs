@@ -39,14 +39,11 @@ namespace XLua
         [MonoPInvokeCallback(typeof(LuaCSFunction))]
         static int StaticCSFunction(RealStatePtr L)
         {
-            try
-            {
+            try {
                 ObjectTranslator translator = ObjectTranslatorPool.Instance.Find(L);
                 LuaCSFunction func = (LuaCSFunction)translator.FastGetCSObj(L, LuaAPI.xlua_upvalueindex(1));
                 return func(L);
-            }
-            catch(Exception e)
-            {
+            } catch (Exception e) {
                 return LuaAPI.luaL_error(L, "c# exception in StaticCSFunction:" + e);
             }
         }
@@ -54,15 +51,12 @@ namespace XLua
         [MonoPInvokeCallback(typeof(LuaCSFunction))]
         static int FixCSFunction(RealStatePtr L)
         {
-            try
-            {
+            try {
                 ObjectTranslator translator = ObjectTranslatorPool.Instance.Find(L);
                 int idx = LuaAPI.xlua_tointeger(L, LuaAPI.xlua_upvalueindex(1));
                 LuaCSFunction func = (LuaCSFunction)translator.GetFixCSFunction(idx);
                 return func(L);
-            }
-            catch (Exception e)
-            {
+            } catch (Exception e) {
                 return LuaAPI.luaL_error(L, "c# exception in FixCSFunction:" + e);
             }
         }
@@ -70,18 +64,14 @@ namespace XLua
         [MonoPInvokeCallback(typeof(LuaCSFunction))]
         public static int DelegateCall(RealStatePtr L)
         {
-            try
-            {
+            try {
                 ObjectTranslator translator = ObjectTranslatorPool.Instance.Find(L);
                 object objDelegate = translator.FastGetCSObj(L, 1);
-                if (objDelegate == null || !(objDelegate is Delegate))
-                {
+                if (objDelegate == null || !(objDelegate is Delegate)) {
                     return LuaAPI.luaL_error(L, "trying to invoke a value that is not delegate nor callable");
                 }
                 return translator.methodWrapsCache.GetDelegateWrap(objDelegate.GetType())(L);
-            }
-            catch (Exception e)
-            {
+            } catch (Exception e) {
                 return LuaAPI.luaL_error(L, "c# exception in DelegateCall:" + e);
             }
         }
@@ -89,18 +79,14 @@ namespace XLua
         [MonoPInvokeCallback(typeof(LuaCSFunction))]
         public static int LuaGC(RealStatePtr L)
         {
-            try
-            {
+            try {
                 int udata = LuaAPI.xlua_tocsobj_safe(L, 1);
-                if (udata != -1)
-                {
+                if (udata != -1) {
                     ObjectTranslator translator = ObjectTranslatorPool.Instance.Find(L);
                     translator.collectObject(udata);
                 }
                 return 0;
-            }
-            catch (Exception e)
-            {
+            } catch (Exception e) {
                 return LuaAPI.luaL_error(L, "c# exception in LuaGC:" + e);
             }
         }
@@ -108,15 +94,12 @@ namespace XLua
         [MonoPInvokeCallback(typeof(LuaCSFunction))]
         public static int ToString(RealStatePtr L)
         {
-            try
-            {
+            try {
                 ObjectTranslator translator = ObjectTranslatorPool.Instance.Find(L);
                 object obj = translator.FastGetCSObj(L, 1);
                 translator.PushAny(L, obj != null ? (obj.ToString() + ": " + obj.GetHashCode()) : "<invalid c# object>");
                 return 1;
-            }
-            catch (Exception e)
-            {
+            } catch (Exception e) {
                 return LuaAPI.luaL_error(L, "c# exception in ToString:" + e);
             }
         }
@@ -124,21 +107,17 @@ namespace XLua
         [MonoPInvokeCallback(typeof(LuaCSFunction))]
         public static int DelegateCombine(RealStatePtr L)
         {
-            try
-            {
+            try {
                 var translator = ObjectTranslatorPool.Instance.Find(L);
                 Type type = translator.FastGetCSObj(L, LuaAPI.lua_type(L, 1) == LuaTypes.LUA_TUSERDATA ? 1 : 2).GetType();
                 Delegate d1 = translator.GetObject(L, 1, type) as Delegate;
                 Delegate d2 = translator.GetObject(L, 2, type) as Delegate;
-                if (d1 == null || d2 == null)
-                {
+                if (d1 == null || d2 == null) {
                     return LuaAPI.luaL_error(L, "one parameter must be a delegate, other one must be delegate or function");
                 }
                 translator.PushAny(L, Delegate.Combine(d1, d2));
                 return 1;
-            }
-            catch (Exception e)
-            {
+            } catch (Exception e) {
                 return LuaAPI.luaL_error(L, "c# exception in DelegateCombine:" + e);
             }
         }
@@ -146,24 +125,19 @@ namespace XLua
         [MonoPInvokeCallback(typeof(LuaCSFunction))]
         public static int DelegateRemove(RealStatePtr L)
         {
-            try
-            {
+            try {
                 var translator = ObjectTranslatorPool.Instance.Find(L);
                 Delegate d1 = translator.FastGetCSObj(L, 1) as Delegate;
-                if (d1 == null)
-                {
+                if (d1 == null) {
                     return LuaAPI.luaL_error(L, "#1 parameter must be a delegate");
                 }
                 Delegate d2 = translator.GetObject(L, 2, d1.GetType()) as Delegate;
-                if (d2 == null)
-                {
+                if (d2 == null) {
                     return LuaAPI.luaL_error(L, "#2 parameter must be a delegate or a function ");
                 }
                 translator.PushAny(L, Delegate.Remove(d1, d2));
                 return 1;
-            }
-            catch (Exception e)
-            {
+            } catch (Exception e) {
                 return LuaAPI.luaL_error(L, "c# exception in DelegateRemove:" + e);
             }
         }
@@ -177,80 +151,51 @@ namespace XLua
         static bool tryPrimitiveArrayGet(Type type, RealStatePtr L, object obj, int index)
         {
             bool ok = true;
-            
-            if (type == typeof(int[]))
-            {
+
+            if (type == typeof(int[])) {
                 int[] array = obj as int[];
                 LuaAPI.xlua_pushinteger(L, array[index]);
-            }
-            else if (type == typeof(float[]))
-            {
+            } else if (type == typeof(float[])) {
                 float[] array = obj as float[];
                 LuaAPI.lua_pushnumber(L, array[index]);
-            }
-            else if (type == typeof(double[]))
-            {
+            } else if (type == typeof(double[])) {
                 double[] array = obj as double[];
                 LuaAPI.lua_pushnumber(L, array[index]);
-            }
-            else if (type == typeof(bool[]))
-            {
+            } else if (type == typeof(bool[])) {
                 bool[] array = obj as bool[];
                 LuaAPI.lua_pushboolean(L, array[index]);
-            }
-            else if (type == typeof(long[]))
-            {
+            } else if (type == typeof(long[])) {
                 long[] array = obj as long[];
                 LuaAPI.lua_pushint64(L, array[index]);
-            }
-            else if (type == typeof(ulong[]))
-            {
+            } else if (type == typeof(ulong[])) {
                 ulong[] array = obj as ulong[];
                 LuaAPI.lua_pushuint64(L, array[index]);
-            }
-            else if (type == typeof(sbyte[]))
-            {
+            } else if (type == typeof(sbyte[])) {
                 sbyte[] array = obj as sbyte[];
                 LuaAPI.xlua_pushinteger(L, array[index]);
-            }
-            else if (type == typeof(short[]))
-            {
+            } else if (type == typeof(short[])) {
                 short[] array = obj as short[];
                 LuaAPI.xlua_pushinteger(L, array[index]);
-            }
-            else if (type == typeof(ushort[]))
-            {
+            } else if (type == typeof(ushort[])) {
                 ushort[] array = obj as ushort[];
                 LuaAPI.xlua_pushinteger(L, array[index]);
-            }
-            else if (type == typeof(char[]))
-            {
+            } else if (type == typeof(char[])) {
                 char[] array = obj as char[];
                 LuaAPI.xlua_pushinteger(L, array[index]);
-            }
-            else if (type == typeof(uint[]))
-            {
+            } else if (type == typeof(uint[])) {
                 uint[] array = obj as uint[];
                 LuaAPI.xlua_pushuint(L, array[index]);
-            }
-            else if (type == typeof(IntPtr[]))
-            {
+            } else if (type == typeof(IntPtr[])) {
                 IntPtr[] array = obj as IntPtr[];
                 LuaAPI.lua_pushlightuserdata(L, array[index]);
-            }
-            else if (type == typeof(decimal[]))
-            {
+            } else if (type == typeof(decimal[])) {
                 decimal[] array = obj as decimal[];
                 ObjectTranslator translator = ObjectTranslatorPool.Instance.Find(L);
                 translator.PushDecimal(L, array[index]);
-            }
-            else if (type == typeof(string[]))
-            {
+            } else if (type == typeof(string[])) {
                 string[] array = obj as string[];
                 LuaAPI.lua_pushstring(L, array[index]);
-            }
-            else
-            {
+            } else {
                 ok = false;
             }
             return ok;
@@ -259,40 +204,31 @@ namespace XLua
         [MonoPInvokeCallback(typeof(LuaCSFunction))]
         public static int ArrayIndexer(RealStatePtr L)
         {
-            try
-            {
+            try {
                 ObjectTranslator translator = ObjectTranslatorPool.Instance.Find(L);
                 System.Array array = (System.Array)translator.FastGetCSObj(L, 1);
 
-                if (array == null)
-                {
+                if (array == null) {
                     return LuaAPI.luaL_error(L, "#1 parameter is not a array!");
                 }
 
                 int i = LuaAPI.xlua_tointeger(L, 2);
 
-                if (i >= array.Length)
-                {
+                if (i >= array.Length) {
                     return LuaAPI.luaL_error(L, "index out of range! i =" + i + ", array.Length=" + array.Length);
                 }
 
                 Type type = array.GetType();
-                if (tryPrimitiveArrayGet(type, L, array, i))
-                {
+                if (tryPrimitiveArrayGet(type, L, array, i)) {
                     return 1;
                 }
 
-                if (genTryArrayGetPtr != null)
-                {
-                    try
-                    {
-                        if (genTryArrayGetPtr(type, L, translator, array, i))
-                        {
+                if (genTryArrayGetPtr != null) {
+                    try {
+                        if (genTryArrayGetPtr(type, L, translator, array, i)) {
                             return 1;
                         }
-                    }
-                    catch (Exception e)
-                    {
+                    } catch (Exception e) {
                         return LuaAPI.luaL_error(L, "c# exception:" + e.Message + ",stack:" + e.StackTrace);
                     }
                 }
@@ -301,9 +237,7 @@ namespace XLua
                 translator.PushAny(L, ret);
 
                 return 1;
-            }
-            catch (Exception e)
-            {
+            } catch (Exception e) {
                 return LuaAPI.luaL_error(L, "c# exception in ArrayIndexer:" + e);
             }
         }
@@ -315,98 +249,62 @@ namespace XLua
 
             LuaTypes lua_type = LuaAPI.lua_type(L, obj_idx);
 
-            if (type == typeof(int[]) && lua_type == LuaTypes.LUA_TNUMBER)
-            {
+            if (type == typeof(int[]) && lua_type == LuaTypes.LUA_TNUMBER) {
                 int[] array = obj as int[];
                 array[array_idx] = LuaAPI.xlua_tointeger(L, obj_idx);
-            }
-            else if (type == typeof(float[]) && lua_type == LuaTypes.LUA_TNUMBER)
-            {
+            } else if (type == typeof(float[]) && lua_type == LuaTypes.LUA_TNUMBER) {
                 float[] array = obj as float[];
                 array[array_idx] = (float)LuaAPI.lua_tonumber(L, obj_idx);
-            }
-            else if (type == typeof(double[]) && lua_type == LuaTypes.LUA_TNUMBER)
-            {
+            } else if (type == typeof(double[]) && lua_type == LuaTypes.LUA_TNUMBER) {
                 double[] array = obj as double[];
                 array[array_idx] = LuaAPI.lua_tonumber(L, obj_idx); ;
-            }
-            else if (type == typeof(bool[]) && lua_type == LuaTypes.LUA_TBOOLEAN)
-            {
+            } else if (type == typeof(bool[]) && lua_type == LuaTypes.LUA_TBOOLEAN) {
                 bool[] array = obj as bool[];
                 array[array_idx] = LuaAPI.lua_toboolean(L, obj_idx);
-            }
-            else if (type == typeof(long[]) && LuaAPI.lua_isint64(L, obj_idx))
-            {
+            } else if (type == typeof(long[]) && LuaAPI.lua_isint64(L, obj_idx)) {
                 long[] array = obj as long[];
                 array[array_idx] = LuaAPI.lua_toint64(L, obj_idx);
-            }
-            else if (type == typeof(ulong[]) && LuaAPI.lua_isuint64(L, obj_idx))
-            {
+            } else if (type == typeof(ulong[]) && LuaAPI.lua_isuint64(L, obj_idx)) {
                 ulong[] array = obj as ulong[];
                 array[array_idx] = LuaAPI.lua_touint64(L, obj_idx);
-            }
-            else if (type == typeof(sbyte[]) && lua_type == LuaTypes.LUA_TNUMBER)
-            {
+            } else if (type == typeof(sbyte[]) && lua_type == LuaTypes.LUA_TNUMBER) {
                 sbyte[] array = obj as sbyte[];
                 array[array_idx] = (sbyte)LuaAPI.xlua_tointeger(L, obj_idx);
-            }
-            else if (type == typeof(short[]) && lua_type == LuaTypes.LUA_TNUMBER)
-            {
+            } else if (type == typeof(short[]) && lua_type == LuaTypes.LUA_TNUMBER) {
                 short[] array = obj as short[];
                 array[array_idx] = (short)LuaAPI.xlua_tointeger(L, obj_idx);
-            }
-            else if (type == typeof(ushort[]) && lua_type == LuaTypes.LUA_TNUMBER)
-            {
+            } else if (type == typeof(ushort[]) && lua_type == LuaTypes.LUA_TNUMBER) {
                 ushort[] array = obj as ushort[];
                 array[array_idx] = (ushort)LuaAPI.xlua_tointeger(L, obj_idx);
-            }
-            else if (type == typeof(char[]) && lua_type == LuaTypes.LUA_TNUMBER)
-            {
+            } else if (type == typeof(char[]) && lua_type == LuaTypes.LUA_TNUMBER) {
                 char[] array = obj as char[];
                 array[array_idx] = (char)LuaAPI.xlua_tointeger(L, obj_idx);
-            }
-            else if (type == typeof(uint[]) && lua_type == LuaTypes.LUA_TNUMBER)
-            {
+            } else if (type == typeof(uint[]) && lua_type == LuaTypes.LUA_TNUMBER) {
                 uint[] array = obj as uint[];
                 array[array_idx] = LuaAPI.xlua_touint(L, obj_idx);
-            }
-            else if (type == typeof(IntPtr[]) && lua_type == LuaTypes.LUA_TLIGHTUSERDATA)
-            {
+            } else if (type == typeof(IntPtr[]) && lua_type == LuaTypes.LUA_TLIGHTUSERDATA) {
                 IntPtr[] array = obj as IntPtr[];
                 array[array_idx] = LuaAPI.lua_touserdata(L, obj_idx);
-            }
-            else if (type == typeof(decimal[]))
-            {
+            } else if (type == typeof(decimal[])) {
                 decimal[] array = obj as decimal[];
-                if (lua_type == LuaTypes.LUA_TNUMBER)
-                {
+                if (lua_type == LuaTypes.LUA_TNUMBER) {
                     array[array_idx] = (decimal)LuaAPI.lua_tonumber(L, obj_idx);
                 }
 
-                if (lua_type == LuaTypes.LUA_TUSERDATA)
-                {
+                if (lua_type == LuaTypes.LUA_TUSERDATA) {
                     ObjectTranslator translator = ObjectTranslatorPool.Instance.Find(L);
-                    if (translator.IsDecimal(L, obj_idx))
-                    {
+                    if (translator.IsDecimal(L, obj_idx)) {
                         translator.Get(L, obj_idx, out array[array_idx]);
-                    }
-                    else
-                    {
+                    } else {
                         ok = false;
                     }
-                }
-                else
-                {
+                } else {
                     ok = false;
                 }
-            }
-            else if (type == typeof(string[]) && lua_type == LuaTypes.LUA_TSTRING)
-            {
+            } else if (type == typeof(string[]) && lua_type == LuaTypes.LUA_TSTRING) {
                 string[] array = obj as string[];
                 array[array_idx] = LuaAPI.lua_tostring(L, obj_idx);
-            }
-            else
-            {
+            } else {
                 ok = false;
             }
             return ok;
@@ -415,40 +313,31 @@ namespace XLua
         [MonoPInvokeCallback(typeof(LuaCSFunction))]
         public static int ArrayNewIndexer(RealStatePtr L)
         {
-            try
-            {
+            try {
                 ObjectTranslator translator = ObjectTranslatorPool.Instance.Find(L);
                 System.Array array = (System.Array)translator.FastGetCSObj(L, 1);
 
-                if (array == null)
-                {
+                if (array == null) {
                     return LuaAPI.luaL_error(L, "#1 parameter is not a array!");
                 }
 
                 int i = LuaAPI.xlua_tointeger(L, 2);
 
-                if (i >= array.Length)
-                {
+                if (i >= array.Length) {
                     return LuaAPI.luaL_error(L, "index out of range! i =" + i + ", array.Length=" + array.Length);
                 }
 
                 Type type = array.GetType();
-                if (TryPrimitiveArraySet(type, L, array, i, 3))
-                {
+                if (TryPrimitiveArraySet(type, L, array, i, 3)) {
                     return 0;
                 }
 
-                if (GenTryArraySetPtr != null)
-                {
-                    try
-                    {
-                        if (GenTryArraySetPtr(type, L, translator, array, i, 3))
-                        {
+                if (GenTryArraySetPtr != null) {
+                    try {
+                        if (GenTryArraySetPtr(type, L, translator, array, i, 3)) {
                             return 0;
                         }
-                    }
-                    catch (Exception e)
-                    {
+                    } catch (Exception e) {
                         return LuaAPI.luaL_error(L, "c# exception:" + e.Message + ",stack:" + e.StackTrace);
                     }
                 }
@@ -457,9 +346,7 @@ namespace XLua
                 array.SetValue(val, i);
 
                 return 0;
-            }
-            catch (Exception e)
-            {
+            } catch (Exception e) {
                 return LuaAPI.luaL_error(L, "c# exception in ArrayNewIndexer:" + e);
             }
         }
@@ -467,15 +354,12 @@ namespace XLua
         [MonoPInvokeCallback(typeof(LuaCSFunction))]
         public static int ArrayLength(RealStatePtr L)
         {
-            try
-            {
+            try {
                 ObjectTranslator translator = ObjectTranslatorPool.Instance.Find(L);
                 System.Array array = (System.Array)translator.FastGetCSObj(L, 1);
                 LuaAPI.xlua_pushinteger(L, array.Length);
                 return 1;
-            }
-            catch (System.Exception e)
-            {
+            } catch (System.Exception e) {
                 return LuaAPI.luaL_error(L, "c# exception in ArrayLength:" + e);
             }
         }
@@ -483,12 +367,10 @@ namespace XLua
         [MonoPInvokeCallback(typeof(LuaCSFunction))]
         public static int MetaFuncIndex(RealStatePtr L)
         {
-            try
-            {
+            try {
                 ObjectTranslator translator = ObjectTranslatorPool.Instance.Find(L);
                 Type type = translator.FastGetCSObj(L, 2) as Type;
-                if (type == null)
-                {
+                if (type == null) {
                     return LuaAPI.luaL_error(L, "#2 param need a System.Type!");
                 }
                 //UnityEngine.Debug.Log("============================load type by __index:" + type);
@@ -496,9 +378,7 @@ namespace XLua
                 LuaAPI.lua_pushvalue(L, 2);
                 LuaAPI.lua_rawget(L, 1);
                 return 1;
-            }
-            catch (System.Exception e)
-            {
+            } catch (System.Exception e) {
                 return LuaAPI.luaL_error(L, "c# exception in MetaFuncIndex:" + e);
             }
         }
@@ -514,22 +394,18 @@ namespace XLua
         [MonoPInvokeCallback(typeof(LuaCSFunction))]
         internal static int Print(RealStatePtr L)
         {
-            try
-            {
+            try {
                 int n = LuaAPI.lua_gettop(L);
                 string s = String.Empty;
 
-                if (0 != LuaAPI.xlua_getglobal(L, "tostring"))
-                {
+                if (0 != LuaAPI.xlua_getglobal(L, "tostring")) {
                     return LuaAPI.luaL_error(L, "can not get tostring in print:");
                 }
 
-                for (int i = 1; i <= n; i++)
-                {
+                for (int i = 1; i <= n; i++) {
                     LuaAPI.lua_pushvalue(L, -1);  /* function to be called */
                     LuaAPI.lua_pushvalue(L, i);   /* value to print */
-                    if (0 != LuaAPI.lua_pcall(L, 1, 1, 0))
-                    {
+                    if (0 != LuaAPI.lua_pcall(L, 1, 1, 0)) {
                         return LuaAPI.lua_error(L);
                     }
                     s += LuaAPI.lua_tostring(L, -1);
@@ -540,9 +416,7 @@ namespace XLua
                 }
                 UnityEngine.Debug.Log("LUA: " + s);
                 return 0;
-            }
-            catch (System.Exception e)
-            {
+            } catch (System.Exception e) {
                 return LuaAPI.luaL_error(L, "c# exception in print:" + e);
             }
         }
@@ -556,27 +430,21 @@ namespace XLua
         [MonoPInvokeCallback(typeof(LuaCSFunction))]
         internal static int LoadBuiltinLib(RealStatePtr L)
         {
-            try
-            {
+            try {
                 string builtin_lib = LuaAPI.lua_tostring(L, 1);
 
                 LuaEnv self = ObjectTranslatorPool.Instance.Find(L).luaEnv;
 
                 LuaCSFunction initer;
 
-                if (self.buildin_initer.TryGetValue(builtin_lib, out initer))
-                {
+                if (self.buildin_initer.TryGetValue(builtin_lib, out initer)) {
                     LuaAPI.lua_pushstdcallcfunction(L, initer);
-                }
-                else
-                {
+                } else {
                     LuaAPI.lua_pushstring(L, string.Format(
                         "\n\tno such builtin lib '{0}'", builtin_lib));
                 }
                 return 1;
-            }
-            catch (System.Exception e)
-            {
+            } catch (System.Exception e) {
                 return LuaAPI.luaL_error(L, "c# exception in LoadBuiltinLib:" + e);
             }
         }
@@ -584,30 +452,21 @@ namespace XLua
         [MonoPInvokeCallback(typeof(LuaCSFunction))]
         internal static int LoadFromResource(RealStatePtr L)
         {
-            try
-            {
+            try {
                 string filename = LuaAPI.lua_tostring(L, 1).Replace('.', '/') + ".lua";
 
                 // Load with Unity3D resources
                 UnityEngine.TextAsset file = (UnityEngine.TextAsset)UnityEngine.Resources.Load(filename);
-                if (file == null)
-                {
+                if (file == null) {
                     LuaAPI.lua_pushstring(L, string.Format(
                         "\n\tno such resource '{0}'", filename));
-                }
-                else
-                {
-                    if (LuaAPI.luaL_loadbuffer(L, file.text, "@" + filename) != 0)
-                    {
-                        return LuaAPI.luaL_error(L, String.Format("error loading module {0} from resource, {1}",
-                            LuaAPI.lua_tostring(L, 1), LuaAPI.lua_tostring(L, -1)));
+                } else {
+                    if (LuaAPI.luaL_loadbuffer(L, file.text, "@" + filename) != 0) {
+                        return LuaAPI.luaL_error(L, String.Format("error loading module {0} from resource, {1}", LuaAPI.lua_tostring(L, 1), LuaAPI.lua_tostring(L, -1)));
                     }
                 }
-
                 return 1;
-            }
-            catch (System.Exception e)
-            {
+            } catch (System.Exception e) {
                 return LuaAPI.luaL_error(L, "c# exception in LoadFromResource:" + e);
             }
         }
@@ -675,32 +534,25 @@ namespace XLua
         [MonoPInvokeCallback(typeof(LuaCSFunction))]
         internal static int LoadFromCustomLoaders(RealStatePtr L)
         {
-            try
-            {
+            try {
                 string filename = LuaAPI.lua_tostring(L, 1);
 
                 LuaEnv self = ObjectTranslatorPool.Instance.Find(L).luaEnv;
 
-                foreach (var loader in self.customLoaders)
-                {
+                foreach (var loader in self.customLoaders) {
                     string real_file_path = filename;
                     byte[] bytes = loader(ref real_file_path);
-                    if (bytes != null)
-                    {
-                        if (LuaAPI.xluaL_loadbuffer(L, bytes, bytes.Length, "@" + real_file_path) != 0)
-                        {
+                    if (bytes != null) {
+                        if (LuaAPI.xluaL_loadbuffer(L, bytes, bytes.Length, "@" + real_file_path) != 0) {
                             return LuaAPI.luaL_error(L, String.Format("error loading module {0} from CustomLoader, {1}",
                                 LuaAPI.lua_tostring(L, 1), LuaAPI.lua_tostring(L, -1)));
                         }
                         return 1;
                     }
                 }
-                LuaAPI.lua_pushstring(L, string.Format(
-                    "\n\tno such file '{0}' in CustomLoaders!", filename));
+                LuaAPI.lua_pushstring(L, string.Format("\n\tno such file '{0}' in CustomLoaders!", filename));
                 return 1;
-            }
-            catch (System.Exception e)
-            {
+            } catch (System.Exception e) {
                 return LuaAPI.luaL_error(L, "c# exception in LoadFromCustomLoaders:" + e);
             }
         }
@@ -708,67 +560,49 @@ namespace XLua
         [MonoPInvokeCallback(typeof(LuaCSFunction))]
         public static int LoadAssembly(RealStatePtr L)
         {
-            try
-            {
+            try {
                 ObjectTranslator translator = ObjectTranslatorPool.Instance.Find(L);
                 string assemblyName = LuaAPI.lua_tostring(L, 1);
 
                 Assembly assembly = null;
 
-                try
-                {
+                try {
                     assembly = Assembly.Load(assemblyName);
-                }
-                catch (BadImageFormatException)
-                {
+                } catch (BadImageFormatException) {
                     // The assemblyName was invalid.  It is most likely a path.
                 }
 
-                if (assembly == null)
-                {
+                if (assembly == null) {
                     assembly = Assembly.Load(AssemblyName.GetAssemblyName(assemblyName));
                 }
 
-                if (assembly != null && !translator.assemblies.Contains(assembly))
-                {
+                if (assembly != null && !translator.assemblies.Contains(assembly)) {
                     translator.assemblies.Add(assembly);
                 }
                 return 0;
-            }
-            catch (System.Exception e)
-            {
+            } catch (System.Exception e) {
                 return LuaAPI.luaL_error(L, "c# exception in xlua.load_assembly:" + e);
             }
         }
 
-
         [MonoPInvokeCallback(typeof(LuaCSFunction))]
         public static int ImportType(RealStatePtr L)
         {
-            try
-            {
+            try {
                 ObjectTranslator translator = ObjectTranslatorPool.Instance.Find(L);
                 string className = LuaAPI.lua_tostring(L, 1);
                 Type type = translator.FindType(className);
-                if (type != null)
-                {
-                    if (translator.TryDelayWrapLoader(L, type))
-                    {
+                if (type != null) {
+                    if (translator.TryDelayWrapLoader(L, type)) {
                         LuaAPI.lua_pushboolean(L, true);
-                    }
-                    else
-                    {
+                    } else {
                         return LuaAPI.luaL_error(L, "can not load type " + type);
                     }
-                }
-                else
-                {
+                } else {
                     LuaAPI.lua_pushnil(L);
                 }
                 return 1;
-            }
-            catch (System.Exception e)
-            {
+            } catch (System.Exception e) {
                 return LuaAPI.luaL_error(L, "c# exception in xlua.import_type:" + e);
             }
         }

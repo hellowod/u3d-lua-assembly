@@ -50,7 +50,7 @@ namespace XLua
 
         Type paramsType = null;
 
-        public bool HasDefalutValue{ get; private set; }
+        public bool HasDefalutValue { get; private set; }
 
         public OverloadMethodWrap(ObjectTranslator translator, Type targetType, MethodBase method)
         {
@@ -62,11 +62,9 @@ namespace XLua
 
         public void Init(ObjectCheckers objCheckers, ObjectCasters objCasters)
         {
-            if (typeof(Delegate).IsAssignableFrom(targetType) || !method.IsStatic || method.IsConstructor)
-            {
+            if (typeof(Delegate).IsAssignableFrom(targetType) || !method.IsStatic || method.IsConstructor) {
                 luaStackPosStart = 2;
-                if (!method.IsConstructor)
-                {
+                if (!method.IsConstructor) {
                     targetNeeded = true;
                 }
             }
@@ -82,36 +80,29 @@ namespace XLua
             List<bool> isOptionalList = new List<bool>();
             List<object> defaultValueList = new List<object>();
 
-            for(int i = 0; i < paramInfos.Length; i++)
-            {
+            for (int i = 0; i < paramInfos.Length; i++) {
                 refPos[i] = -1;
                 if (!paramInfos[i].IsIn && paramInfos[i].IsOut)  // out parameter
-				{
-					outPosList.Add(i);
-				}
-                else
                 {
-                    if(paramInfos[i].ParameterType.IsByRef)
-                    {
+                    outPosList.Add(i);
+                } else {
+                    if (paramInfos[i].ParameterType.IsByRef) {
                         var ttype = paramInfos[i].ParameterType.GetElementType();
-                        if(CopyByValue.IsStruct(ttype) && ttype != typeof(decimal))
-                        {
+                        if (CopyByValue.IsStruct(ttype) && ttype != typeof(decimal)) {
                             refPos[i] = inPosList.Count;
                         }
                         outPosList.Add(i);
                     }
 
                     inPosList.Add(i);
-                    var paramType = paramInfos[i].IsDefined(typeof(ParamArrayAttribute), false) || (!paramInfos[i].ParameterType.IsArray && paramInfos[i].ParameterType.IsByRef ) ? 
+                    var paramType = paramInfos[i].IsDefined(typeof(ParamArrayAttribute), false) || (!paramInfos[i].ParameterType.IsArray && paramInfos[i].ParameterType.IsByRef) ?
                         paramInfos[i].ParameterType.GetElementType() : paramInfos[i].ParameterType;
-                    paramsChecks.Add (objCheckers.GetChecker(paramType));
-                    paramsCasts.Add (objCasters.GetCaster(paramType));
+                    paramsChecks.Add(objCheckers.GetChecker(paramType));
+                    paramsCasts.Add(objCasters.GetCaster(paramType));
                     isOptionalList.Add(paramInfos[i].IsOptional);
                     var defalutValue = paramInfos[i].DefaultValue;
-                    if (paramInfos[i].IsOptional)
-                    {
-                        if (defalutValue != null && defalutValue.GetType() != paramInfos[i].ParameterType)
-                        {
+                    if (paramInfos[i].IsOptional) {
+                        if (defalutValue != null && defalutValue.GetType() != paramInfos[i].ParameterType) {
                             defalutValue = defalutValue.GetType() == typeof(Missing) ? Activator.CreateInstance(paramInfos[i].ParameterType) : Convert.ChangeType(defalutValue, paramInfos[i].ParameterType);
                         }
                         HasDefalutValue = true;
@@ -126,8 +117,7 @@ namespace XLua
             isOptionalArray = isOptionalList.ToArray();
             defaultValueArray = defaultValueList.ToArray();
 
-            if (paramInfos.Length > 0 && paramInfos[paramInfos.Length - 1].IsDefined(typeof(ParamArrayAttribute), false))
-            {
+            if (paramInfos.Length > 0 && paramInfos[paramInfos.Length - 1].IsDefined(typeof(ParamArrayAttribute), false)) {
                 paramsType = paramInfos[paramInfos.Length - 1].ParameterType.GetElementType();
             }
 
@@ -136,9 +126,7 @@ namespace XLua
             if (method is MethodInfo) //constructor is not MethodInfo?
             {
                 isVoid = (method as MethodInfo).ReturnType == typeof(void);
-            }
-            else if(method is ConstructorInfo)
-            {
+            } else if (method is ConstructorInfo) {
                 isVoid = false;
             }
         }
@@ -148,28 +136,22 @@ namespace XLua
             int luaTop = LuaAPI.lua_gettop(L);
             int luaStackPos = luaStackPosStart;
 
-            for(int i = 0; i < checkArray.Length; i++)
-            {
-                if ((i == (checkArray.Length - 1)) && (paramsType != null))
-                {
+            for (int i = 0; i < checkArray.Length; i++) {
+                if ((i == (checkArray.Length - 1)) && (paramsType != null)) {
                     break;
                 }
-                if(luaStackPos > luaTop && !isOptionalArray[i])
-                {
+                if (luaStackPos > luaTop && !isOptionalArray[i]) {
                     return false;
-                }
-                else if(luaStackPos <= luaTop && !checkArray[i](L, luaStackPos))
-                {
+                } else if (luaStackPos <= luaTop && !checkArray[i](L, luaStackPos)) {
                     return false;
                 }
 
-                if (luaStackPos <= luaTop || !isOptionalArray[i])
-                {
+                if (luaStackPos <= luaTop || !isOptionalArray[i]) {
                     luaStackPos++;
                 }
             }
 
-            return paramsType != null ? (luaStackPos < luaTop + 1 ? 
+            return paramsType != null ? (luaStackPos < luaTop + 1 ?
                 checkArray[checkArray.Length - 1](L, luaStackPos) : true) : luaStackPos == luaTop + 1;
         }
 
@@ -178,11 +160,9 @@ namespace XLua
             object target = null;
             MethodBase toInvoke = method;
 
-            if (luaStackPosStart > 1)
-            {
+            if (luaStackPosStart > 1) {
                 target = translator.FastGetCSObj(L, 1);
-                if (target is Delegate)
-                {
+                if (target is Delegate) {
                     Delegate delegateInvoke = (Delegate)target;
                     toInvoke = delegateInvoke.Method;
                 }
@@ -192,21 +172,15 @@ namespace XLua
             int luaTop = LuaAPI.lua_gettop(L);
             int luaStackPos = luaStackPosStart;
 
-            for (int i = 0; i < castArray.Length; i++)
-            {
+            for (int i = 0; i < castArray.Length; i++) {
                 //UnityEngine.Debug.Log("inPos:" + inPosArray[i]);
                 if (luaStackPos > luaTop) //after check
                 {
                     args[inPosArray[i]] = defaultValueArray[i];
-                }
-                else
-                {
-                    if (paramsType != null && i == castArray.Length - 1)
-                    {
+                } else {
+                    if (paramsType != null && i == castArray.Length - 1) {
                         args[inPosArray[i]] = translator.GetParams(L, luaStackPos, paramsType);
-                    }
-                    else
-                    {
+                    } else {
                         args[inPosArray[i]] = castArray[i](L, luaStackPos, null);
                     }
                     luaStackPos++;
@@ -221,17 +195,14 @@ namespace XLua
 
             int nRet = 0;
 
-            if (!isVoid)
-            {
+            if (!isVoid) {
                 //UnityEngine.Debug.Log(toInvoke.ToString() + " ret:" + ret);
                 translator.PushAny(L, ret);
                 nRet++;
             }
 
-            for (int i = 0; i < outPosArray.Length; i++)
-            {
-                if (refPos[outPosArray[i]] != -1)
-                {
+            for (int i = 0; i < outPosArray.Length; i++) {
+                if (refPos[outPosArray[i]] != -1) {
                     translator.Update(L, luaStackPosStart + refPos[outPosArray[i]], args[outPosArray[i]]);
                 }
                 translator.PushAny(L, args[outPosArray[i]]);
@@ -282,13 +253,13 @@ namespace XLua
 
     public class MethodWrapsCache
     {
-        ObjectTranslator translator;
-        ObjectCheckers objCheckers;
-        ObjectCasters objCasters;
+        private ObjectTranslator translator;
+        private ObjectCheckers objCheckers;
+        private ObjectCasters objCasters;
 
-        Dictionary<Type, LuaCSFunction> constructorCache = new Dictionary<Type, LuaCSFunction>();
-        Dictionary<Type, Dictionary<string, LuaCSFunction>> methodsCache = new Dictionary<Type, Dictionary<string, LuaCSFunction>>();
-        Dictionary<Type, LuaCSFunction> delegateCache = new Dictionary<Type, LuaCSFunction>();
+        private Dictionary<Type, LuaCSFunction> constructorCache = new Dictionary<Type, LuaCSFunction>();
+        private Dictionary<Type, Dictionary<string, LuaCSFunction>> methodsCache = new Dictionary<Type, Dictionary<string, LuaCSFunction>>();
+        private Dictionary<Type, LuaCSFunction> delegateCache = new Dictionary<Type, LuaCSFunction>();
 
         public MethodWrapsCache(ObjectTranslator translator, ObjectCheckers objCheckers, ObjectCasters objCasters)
         {
@@ -300,26 +271,18 @@ namespace XLua
         public LuaCSFunction GetConstructorWrap(Type type)
         {
             //UnityEngine.Debug.LogWarning("GetConstructor:" + type);
-            if (!constructorCache.ContainsKey(type))
-            {
+            if (!constructorCache.ContainsKey(type)) {
                 var constructors = type.GetConstructors();
-                if (type.IsAbstract || constructors == null || constructors.Length == 0)
-                {
-                    if (type.IsValueType)
-                    {
-                        constructorCache[type] = (L) =>
-                        {
+                if (type.IsAbstract || constructors == null || constructors.Length == 0) {
+                    if (type.IsValueType) {
+                        constructorCache[type] = (L) => {
                             translator.PushAny(L, Activator.CreateInstance(type));
                             return 1;
                         };
-                    }
-                    else
-                    {
+                    } else {
                         return null;
                     }
-                }
-                else
-                {
+                } else {
                     constructorCache[type] = _GenMethodWrap(type, ".ctor", constructors).Call;
                 }
             }
@@ -329,16 +292,13 @@ namespace XLua
         public LuaCSFunction GetMethodWrap(Type type, string methodName)
         {
             //UnityEngine.Debug.LogWarning("GetMethodWrap:" + type + " " + methodName);
-            if (!methodsCache.ContainsKey(type))
-            {
+            if (!methodsCache.ContainsKey(type)) {
                 methodsCache[type] = new Dictionary<string, LuaCSFunction>();
             }
             var methodsOfType = methodsCache[type];
-            if (!methodsOfType.ContainsKey(methodName))
-            {
+            if (!methodsOfType.ContainsKey(methodName)) {
                 MemberInfo[] methods = type.GetMember(methodName, BindingFlags.Static | BindingFlags.Instance | BindingFlags.Public | BindingFlags.IgnoreCase);
-                if (methods == null || methods.Length == 0 || methods[0].MemberType != MemberTypes.Method)
-                {
+                if (methods == null || methods.Length == 0 || methods[0].MemberType != MemberTypes.Method) {
                     return null;
                 }
                 methodsOfType[methodName] = _GenMethodWrap(type, methodName, methods).Call;
@@ -350,8 +310,7 @@ namespace XLua
         {
             //string retriKey = type.ToString() + "." + methodName;
             //return methodsCache.ContainsKey(retriKey) ? methodsCache[retriKey] : null;
-            if (!methodsCache.ContainsKey(type))
-            {
+            if (!methodsCache.ContainsKey(type)) {
                 methodsCache[type] = new Dictionary<string, LuaCSFunction>();
             }
             var methodsOfType = methodsCache[type];
@@ -361,12 +320,10 @@ namespace XLua
         public LuaCSFunction GetDelegateWrap(Type type)
         {
             //UnityEngine.Debug.LogWarning("GetDelegateWrap:" + type );
-            if (!typeof(Delegate).IsAssignableFrom(type))
-            {
+            if (!typeof(Delegate).IsAssignableFrom(type)) {
                 return null;
             }
-            if (!delegateCache.ContainsKey(type))
-            {
+            if (!delegateCache.ContainsKey(type)) {
                 delegateCache[type] = _GenMethodWrap(type, type.ToString(), new MethodBase[] { type.GetMethod("Invoke") }).Call;
             }
             return delegateCache[type];
@@ -374,18 +331,15 @@ namespace XLua
 
         public LuaCSFunction GetEventWrap(Type type, string eventName)
         {
-            if (!methodsCache.ContainsKey(type))
-            {
+            if (!methodsCache.ContainsKey(type)) {
                 methodsCache[type] = new Dictionary<string, LuaCSFunction>();
             }
 
             var methodsOfType = methodsCache[type];
-            if (!methodsOfType.ContainsKey(eventName))
-            {
+            if (!methodsOfType.ContainsKey(eventName)) {
                 {
                     EventInfo eventInfo = type.GetEvent(eventName, BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly | BindingFlags.Static);
-                    if (eventInfo == null)
-                    {
+                    if (eventInfo == null) {
                         throw new Exception(type.Name + " has no event named: " + eventName);
                     }
                     int start_idx = 0;
@@ -396,38 +350,30 @@ namespace XLua
                     bool is_static = add != null ? add.IsStatic : remove.IsStatic;
                     if (!is_static) start_idx = 1;
 
-                    methodsOfType[eventName] = (L) =>
-                    {
+                    methodsOfType[eventName] = (L) => {
                         object obj = null;
 
-                        if (!is_static)
-                        {
+                        if (!is_static) {
                             obj = translator.GetObject(L, 1, type);
-                            if (obj == null)
-                            {
+                            if (obj == null) {
                                 return LuaAPI.luaL_error(L, "invalid #1, needed:" + type);
                             }
                         }
 
-                        try
-                        {
+                        try {
                             Delegate handlerDelegate = translator.CreateDelegateBridge(L, eventInfo.EventHandlerType, start_idx + 2);
-                            if (handlerDelegate == null)
-                            {
+                            if (handlerDelegate == null) {
                                 return LuaAPI.luaL_error(L, "invalid #" + (start_idx + 2) + ", needed:" + eventInfo.EventHandlerType);
                             }
-                            switch (LuaAPI.lua_tostring(L, start_idx + 1))
-                            {
+                            switch (LuaAPI.lua_tostring(L, start_idx + 1)) {
                                 case "+":
-                                    if (add == null)
-                                    {
+                                    if (add == null) {
                                         return LuaAPI.luaL_error(L, "no add for event " + eventName);
                                     }
                                     add.Invoke(obj, new object[] { handlerDelegate });
                                     break;
                                 case "-":
-                                    if (remove == null)
-                                    {
+                                    if (remove == null) {
                                         return LuaAPI.luaL_error(L, "no remove for event " + eventName);
                                     }
                                     remove.Invoke(obj, new object[] { handlerDelegate });
@@ -435,9 +381,7 @@ namespace XLua
                                 default:
                                     return LuaAPI.luaL_error(L, "invalid #" + (start_idx + 1) + ", needed: '+' or '-'" + eventInfo.EventHandlerType);
                             }
-                        }
-                        catch (System.Exception e)
-                        {
+                        } catch (System.Exception e) {
                             return LuaAPI.luaL_error(L, "c# exception:" + e + ",stack:" + e.StackTrace);
                         }
 
@@ -449,10 +393,9 @@ namespace XLua
         }
 
         public MethodWrap _GenMethodWrap(Type type, string methodName, IEnumerable<MemberInfo> methodBases)
-        { 
+        {
             List<OverloadMethodWrap> overloads = new List<OverloadMethodWrap>();
-            foreach(var methodBase in methodBases)
-            {
+            foreach (var methodBase in methodBases) {
                 var mb = methodBase as MethodBase;
                 if (mb == null)
                     continue;
@@ -471,8 +414,7 @@ namespace XLua
         {
             var genericArguments = method.GetGenericArguments();
             var constraintedArgumentTypes = new Type[genericArguments.Length];
-            for (var i = 0; i < genericArguments.Length; i++)
-            {
+            for (var i = 0; i < genericArguments.Length; i++) {
                 var argumentType = genericArguments[i];
                 var parameterConstraints = argumentType.GetGenericParameterConstraints();
                 if (parameterConstraints.Length == 0 || !parameterConstraints[0].IsClass)
