@@ -809,19 +809,14 @@ namespace XLua
         }
 
         //meta: -4, method:-3, getter: -2, setter: -1
-        public static void BeginObjectRegister(Type type, RealStatePtr L, ObjectTranslator translator, int meta_count, int method_count, int getter_count,
-            int setter_count, int type_id = -1)
+        public static void BeginObjectRegister(Type type, RealStatePtr L, ObjectTranslator translator, int meta_count, int method_count, int getter_count, int setter_count, int type_id = -1)
         {
-            if (type == null)
-            {
+            if (type == null) {
                 if (type_id == -1) throw new Exception("Fatal: must provide a type of type_id");
                 LuaAPI.xlua_rawgeti(L, LuaIndexes.LUA_REGISTRYINDEX, type_id);
-            }
-            else
-            {
+            } else {
                 LuaAPI.luaL_getmetatable(L, type.FullName);
-                if (LuaAPI.lua_isnil(L, -1))
-                {
+                if (LuaAPI.lua_isnil(L, -1)) {
                     LuaAPI.lua_pop(L, 1);
                     LuaAPI.luaL_newmetatable(L, type.FullName);
                 }
@@ -830,9 +825,8 @@ namespace XLua
             LuaAPI.lua_pushnumber(L, 1);
             LuaAPI.lua_rawset(L, -3);
 
-            if ((type == null || !translator.HasCustomOp(type)) && type != typeof(decimal))
-            {
-                LuaAPI.xlua_pushasciistring(L, "__gc"); 
+            if ((type == null || !translator.HasCustomOp(type)) && type != typeof(decimal)) {
+                LuaAPI.xlua_pushasciistring(L, "__gc");
                 LuaAPI.lua_pushstdcallcfunction(L, translator.metaFunctions.GcMeta);
                 LuaAPI.lua_rawset(L, -3);
             }
@@ -841,30 +835,21 @@ namespace XLua
             LuaAPI.lua_pushstdcallcfunction(L, translator.metaFunctions.ToStringMeta);
             LuaAPI.lua_rawset(L, -3);
 
-            if (method_count == 0)
-            {
+            if (method_count == 0) {
                 LuaAPI.lua_pushnil(L);
-            }
-            else
-            {
+            } else {
                 LuaAPI.lua_createtable(L, 0, method_count);
             }
 
-            if (getter_count == 0)
-            {
+            if (getter_count == 0) {
                 LuaAPI.lua_pushnil(L);
-            }
-            else
-            {
+            } else {
                 LuaAPI.lua_createtable(L, 0, getter_count);
             }
 
-            if (setter_count == 0)
-            {
+            if (setter_count == 0) {
                 LuaAPI.lua_pushnil(L);
-            }
-            else
-            {
+            } else {
                 LuaAPI.lua_createtable(L, 0, setter_count);
             }
         }

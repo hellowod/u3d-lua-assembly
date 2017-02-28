@@ -198,11 +198,12 @@ namespace XLua
                 if (LuaAPI.lua_pcall(L, 0, -1, errFunc) == 0) {
                     LuaAPI.lua_remove(L, errFunc);
                     return translator.popValues(L, oldTop);
-                } else
+                } else {
                     ThrowExceptionFromError(oldTop);
-            } else
+                }
+            } else {
                 ThrowExceptionFromError(oldTop);
-
+            }
             return null;
 #if THREAD_SAFT || HOTFIX_ENABLE
             }

@@ -260,19 +260,14 @@ namespace XLua.LuaDLL
 
         public static void lua_pushstring(IntPtr L, string str) //业务使用
         {
-            if (str == null)
-            {
+            if (str == null) {
                 lua_pushnil(L);
-            }
-            else
-            {
-                if (Encoding.UTF8.GetByteCount(str) > str_buff.Length)
-                {
+            } else {
+                if (Encoding.UTF8.GetByteCount(str) > str_buff.Length) {
                     byte[] bytes = Encoding.UTF8.GetBytes(str);
+                    
                     xlua_pushlstring(L, bytes, bytes.Length);
-                }
-                else
-                {
+                } else {
                     int bytes_len = Encoding.UTF8.GetBytes(str, 0, str.Length, str_buff, 0);
                     xlua_pushlstring(L, str_buff, bytes_len);
                 }
@@ -286,15 +281,11 @@ namespace XLua.LuaDLL
         static byte[] str_buff = new byte[256];
         public static void xlua_pushasciistring(IntPtr L, string str) // for inner use only
         {
-            if (str == null)
-            {
+            if (str == null) {
                 lua_pushnil(L);
-            }
-            else
-            {
+            } else {
                 int str_len = str.Length;
-                if (str_buff.Length < str_len)
-                {
+                if (str_buff.Length < str_len) {
                     str_buff = new byte[str_len];
                 }
 
@@ -305,24 +296,19 @@ namespace XLua.LuaDLL
 
         public static void lua_pushstring(IntPtr L, byte[] str)
         {
-            if (str == null)
-            {
+            if (str == null) {
                 lua_pushnil(L);
-            }
-            else
-            {
+            } else {
                 xlua_pushlstring(L, str, str.Length);
             }
         }
 
         public static byte[] lua_tobytes(IntPtr L, int index)//[-0, +0, m]
         {
-            if (lua_type(L, index) == LuaTypes.LUA_TSTRING)
-            { 
+            if (lua_type(L, index) == LuaTypes.LUA_TSTRING) {
                 IntPtr strlen;
                 IntPtr str = lua_tolstring(L, index, out strlen);
-                if (str != IntPtr.Zero)
-                {
+                if (str != IntPtr.Zero) {
                     int buff_len = strlen.ToInt32();
                     byte[] buffer = new byte[buff_len];
                     Marshal.Copy(str, buffer, 0, buff_len);

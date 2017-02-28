@@ -440,8 +440,7 @@ namespace XLua
                 if (self.buildin_initer.TryGetValue(builtin_lib, out initer)) {
                     LuaAPI.lua_pushstdcallcfunction(L, initer);
                 } else {
-                    LuaAPI.lua_pushstring(L, string.Format(
-                        "\n\tno such builtin lib '{0}'", builtin_lib));
+                    LuaAPI.lua_pushstring(L, string.Format("\n\tno such builtin lib '{0}'", builtin_lib));
                 }
                 return 1;
             } catch (System.Exception e) {

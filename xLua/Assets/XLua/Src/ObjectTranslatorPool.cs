@@ -46,52 +46,48 @@ namespace XLua
         RealStatePtr lastState = default(RealStatePtr);
         ObjectTranslator lastTranslator = default(ObjectTranslator);
 
-		public ObjectTranslator Find (RealStatePtr L)
-		{
-            if (lastState == L) return lastTranslator;
-            if (translators.ContainsKey(L))
-            {
+        public ObjectTranslator Find(RealStatePtr L)
+        {
+            if (lastState == L) {
+                return lastTranslator;
+            }
+            if (translators.ContainsKey(L)) {
                 lastState = L;
                 lastTranslator = translators[L].Target as ObjectTranslator;
                 return lastTranslator;
             }
 
-			RealStatePtr main = Utils.GetMainState (L);
+            RealStatePtr main = Utils.GetMainState(L);
 
-            if (translators.ContainsKey(main))
-            {
+            if (translators.ContainsKey(main)) {
                 lastState = L;
                 lastTranslator = translators[main].Target as ObjectTranslator;
                 translators[L] = new WeakReference(lastTranslator);
                 return lastTranslator;
             }
-			
-			return null;
-		}
-		
-		public void Remove (RealStatePtr L)
-		{
-			if (!translators.ContainsKey (L))
-				return;
-			
-            if (lastState == L)
-            {
+
+            return null;
+        }
+
+        public void Remove(RealStatePtr L)
+        {
+            if (!translators.ContainsKey(L)) {
+                return;
+            }
+            if (lastState == L) {
                 lastState = default(RealStatePtr);
                 lastTranslator = default(ObjectTranslator);
             }
             ObjectTranslator translator = translators[L].Target as ObjectTranslator;
             List<RealStatePtr> toberemove = new List<RealStatePtr>();
 
-            foreach(var kv in translators)
-            {
-                if ((kv.Value.Target as ObjectTranslator) == translator)
-                {
+            foreach (var kv in translators) {
+                if ((kv.Value.Target as ObjectTranslator) == translator) {
                     toberemove.Add(kv.Key);
                 }
             }
 
-            foreach (var ls in toberemove)
-            {
+            foreach (var ls in toberemove) {
                 translators.Remove(ls);
             }
         }
