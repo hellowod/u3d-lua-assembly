@@ -113,6 +113,8 @@ namespace XLua
         //无法访问的类，比如声明成internal，可以用其接口、基类的生成代码来访问
         private readonly Dictionary<Type, Type> aliasCfg = new Dictionary<Type, Type>();
 
+        private readonly Dictionary<Type, bool> loaded_types = new Dictionary<Type, bool>();
+
         public int cacheRef;
 
         public void DelayWrapLoader(Type type, Action<RealStatePtr> loader)
@@ -124,8 +126,7 @@ namespace XLua
         {
             interfaceBridgeCreators.Add(type, creator);
         }
-
-        Dictionary<Type, bool> loaded_types = new Dictionary<Type, bool>();
+        
         public bool TryDelayWrapLoader(RealStatePtr L, Type type)
         {
             if (loaded_types.ContainsKey(type)) {
@@ -180,6 +181,7 @@ namespace XLua
             }
 
             this.luaEnv = luaenv;
+
             objectCasters = new ObjectCasters(this);
             objectCheckers = new ObjectCheckers(this);
             methodWrapsCache = new MethodWrapsCache(this, objectCheckers, objectCasters);
@@ -193,7 +195,9 @@ namespace XLua
             LuaAPI.lua_newtable(L);
             LuaAPI.xlua_pushasciistring(L, "__mode");
             LuaAPI.xlua_pushasciistring(L, "v");
+            // stack[-3]["__mode"]="v"
             LuaAPI.lua_rawset(L, -3);
+            // 设置-1表为-2的元表
             LuaAPI.lua_setmetatable(L, -2);
             cacheRef = LuaAPI.luaL_ref(L, LuaIndexes.LUA_REGISTRYINDEX);
 
@@ -481,7 +485,6 @@ namespace XLua
 
         internal Type FindType(string className)
         {
-            UnityEngine.Debug.LogError(className);
             foreach (Assembly assembly in assemblies) {
                 Type klass = assembly.GetType(className);
                 if (klass != null) {

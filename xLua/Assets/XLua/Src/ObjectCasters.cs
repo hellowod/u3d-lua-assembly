@@ -114,17 +114,12 @@ namespace XLua
 
         private ObjectCheck genChecker(Type type)
         {
-            ObjectCheck fixTypeCheck = (RealStatePtr L, int idx) =>
-            {
-                if (LuaAPI.lua_type(L, idx) == LuaTypes.LUA_TUSERDATA)
-                {
+            ObjectCheck fixTypeCheck = (RealStatePtr L, int idx) => {
+                if (LuaAPI.lua_type(L, idx) == LuaTypes.LUA_TUSERDATA) {
                     object obj = translator.SafeGetCSObj(L, idx);
-                    if (obj != null)
-                    {
+                    if (obj != null) {
                         return type.IsAssignableFrom(obj.GetType());
-                    }
-                    else
-                    {
+                    } else {
                         Type type_of_obj = translator.GetTypeOf(L, idx);
                         if (type_of_obj != null) return type.IsAssignableFrom(type_of_obj);
                     }
@@ -132,51 +127,32 @@ namespace XLua
                 return false;
             };
 
-            if (!type.IsAbstract && typeof(Delegate).IsAssignableFrom(type))
-            {
-                return (RealStatePtr L, int idx) =>
-                {
+            if (!type.IsAbstract && typeof(Delegate).IsAssignableFrom(type)) {
+                return (RealStatePtr L, int idx) => {
                     return LuaAPI.lua_isnil(L, idx) || LuaAPI.lua_isfunction(L, idx) || fixTypeCheck(L, idx);
                 };
-            }
-            else if (type.IsEnum)
-            {
+            } else if (type.IsEnum) {
                 return fixTypeCheck;
-            }
-            else if (type.IsInterface)
-            {
-                return (RealStatePtr L, int idx) =>
-                {
+            } else if (type.IsInterface) {
+                return (RealStatePtr L, int idx) => {
                     return LuaAPI.lua_isnil(L, idx) || LuaAPI.lua_istable(L, idx) || fixTypeCheck(L, idx);
                 };
-            }
-            else
-            {
+            } else {
                 if ((type.IsClass && type.GetConstructor(System.Type.EmptyTypes) != null)) //class has default construtor
                 {
-                    return (RealStatePtr L, int idx) =>
-                    {
+                    return (RealStatePtr L, int idx) => {
                         return LuaAPI.lua_isnil(L, idx) || LuaAPI.lua_istable(L, idx) || fixTypeCheck(L, idx);
                     };
-                }
-                else if (type.IsValueType)
-                {
-                    return (RealStatePtr L, int idx) =>
-                    {
+                } else if (type.IsValueType) {
+                    return (RealStatePtr L, int idx) => {
                         return LuaAPI.lua_istable(L, idx) || fixTypeCheck(L, idx);
                     };
-                }
-                else if (type.IsArray)
-                {
-                    return (RealStatePtr L, int idx) =>
-                    {
+                } else if (type.IsArray) {
+                    return (RealStatePtr L, int idx) => {
                         return LuaAPI.lua_isnil(L, idx) || LuaAPI.lua_istable(L, idx) || fixTypeCheck(L, idx);
                     };
-                }
-                else
-                {
-                    return (RealStatePtr L, int idx) =>
-                    {
+                } else {
+                    return (RealStatePtr L, int idx) => {
                         return LuaAPI.lua_isnil(L, idx) || fixTypeCheck(L, idx);
                     };
                 }
@@ -188,13 +164,11 @@ namespace XLua
             if (type.IsByRef) type = type.GetElementType();
 
             Type underlyingType = Nullable.GetUnderlyingType(type);
-            if (underlyingType != null)
-            {
+            if (underlyingType != null) {
                 type = underlyingType;     // Silently convert nullable types to their non null requics
             }
             ObjectCheck oc;
-            if (!checkersMap.TryGetValue(type, out oc))
-            {
+            if (!checkersMap.TryGetValue(type, out oc)) {
                 oc = genChecker(type);
                 checkersMap.Add(type, oc);
             }

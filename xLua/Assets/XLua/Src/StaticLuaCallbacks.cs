@@ -636,34 +636,26 @@ namespace XLua
         [MonoPInvokeCallback(typeof(LuaCSFunction))]
         public static int XLuaAccess(RealStatePtr L)
         {
-            try
-            {
+            try {
                 ObjectTranslator translator = ObjectTranslatorPool.Instance.Find(L);
                 Type type = null;
                 object obj = null;
-                if (LuaAPI.lua_type(L, 1) == LuaTypes.LUA_TTABLE)
-                {
+                if (LuaAPI.lua_type(L, 1) == LuaTypes.LUA_TTABLE) {
                     LuaTable tbl;
                     translator.Get(L, 1, out tbl);
                     type = tbl.Get<Type>("UnderlyingSystemType");
-                }
-                else if (LuaAPI.lua_type(L, 1) == LuaTypes.LUA_TSTRING)
-                {
+                } else if (LuaAPI.lua_type(L, 1) == LuaTypes.LUA_TSTRING) {
                     string className = LuaAPI.lua_tostring(L, 1);
                     type = translator.FindType(className);
-                }
-                else if (LuaAPI.lua_type(L, 1) == LuaTypes.LUA_TUSERDATA)
-                {
+                } else if (LuaAPI.lua_type(L, 1) == LuaTypes.LUA_TUSERDATA) {
                     obj = translator.SafeGetCSObj(L, 1);
-                    if (obj == null)
-                    {
+                    if (obj == null) {
                         return LuaAPI.luaL_error(L, "xlua.access, #1 parameter must a type/c# object/string");
                     }
                     type = obj.GetType();
                 }
 
-                if (type == null)
-                {
+                if (type == null) {
                     return LuaAPI.luaL_error(L, "xlua.access, can not find c# type");
                 }
 
@@ -674,37 +666,29 @@ namespace XLua
                 if (LuaAPI.lua_gettop(L) > 2) // set
                 {
                     var field = type.GetField(fieldName, bindingFlags);
-                    if (field != null)
-                    {
+                    if (field != null) {
                         field.SetValue(obj, translator.GetObject(L, 3, field.FieldType));
                         return 0;
                     }
                     var prop = type.GetProperty(fieldName, bindingFlags);
-                    if (prop != null)
-                    {
+                    if (prop != null) {
                         prop.SetValue(obj, translator.GetObject(L, 3, prop.PropertyType), null);
                         return 0;
                     }
-                }
-                else
-                {
+                } else {
                     var field = type.GetField(fieldName, bindingFlags);
-                    if (field != null)
-                    {
+                    if (field != null) {
                         translator.PushAny(L, field.GetValue(obj));
                         return 1;
                     }
                     var prop = type.GetProperty(fieldName, bindingFlags);
-                    if (prop != null)
-                    {
+                    if (prop != null) {
                         translator.PushAny(L, prop.GetValue(obj, null));
                         return 1;
                     }
                 }
                 return LuaAPI.luaL_error(L, "xlua.access, no field " + fieldName);
-            }
-            catch(Exception e)
-            {
+            } catch (Exception e) {
                 return LuaAPI.luaL_error(L, "c# exception in xlua.access: " + e);
             }
         }

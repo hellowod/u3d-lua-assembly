@@ -308,23 +308,21 @@ namespace XLua
         public virtual void Dispose(bool dispose)
         {
 #if THREAD_SAFT || HOTFIX_ENABLE
-            lock (luaEnvLock)
-            {
+            lock (luaEnvLock) {
 #endif
-                if (disposed) return;
-                Tick();
+            if (disposed) return;
+            Tick();
 
-                LuaAPI.lua_close(L);
+            LuaAPI.lua_close(L);
 
-                ObjectTranslatorPool.Instance.Remove(L);
-                if (translator != null)
-                {
-                    translator = null;
-                }
+            ObjectTranslatorPool.Instance.Remove(L);
+            if (translator != null) {
+                translator = null;
+            }
 
-                L = IntPtr.Zero;
+            L = IntPtr.Zero;
 
-                disposed = true;
+            disposed = true;
 #if THREAD_SAFT || HOTFIX_ENABLE
             }
 #endif
@@ -333,19 +331,22 @@ namespace XLua
         public void ThrowExceptionFromError(int oldTop)
         {
 #if THREAD_SAFT || HOTFIX_ENABLE
-            lock (luaEnvLock)
-            {
+            lock (luaEnvLock) {
 #endif
-                object err = translator.GetObject(L, -1);
-                LuaAPI.lua_settop(L, oldTop);
+            object err = translator.GetObject(L, -1);
+            LuaAPI.lua_settop(L, oldTop);
 
-                // A pre-wrapped exception - just rethrow it (stack trace of InnerException will be preserved)
-                Exception ex = err as Exception;
-                if (ex != null) throw ex;
+            // A pre-wrapped exception - just rethrow it (stack trace of InnerException will be preserved)
+            Exception ex = err as Exception;
+            if (ex != null) {
+                throw ex;
+            }
 
-                // A non-wrapped Lua error (best interpreted as a string) - wrap it and throw it
-                if (err == null) err = "Unknown Lua Error";
-                throw new LuaException(err.ToString());
+            // A non-wrapped Lua error (best interpreted as a string) - wrap it and throw it
+            if (err == null) {
+                err = "Unknown Lua Error";
+            }
+            throw new LuaException(err.ToString());
 #if THREAD_SAFT || HOTFIX_ENABLE
             }
 #endif
@@ -361,8 +362,7 @@ namespace XLua
 
         internal void equeueGCAction(GCAction action)
         {
-            lock (refQueue)
-            {
+            lock (refQueue) {
                 refQueue.Enqueue(action);
             }
         }
@@ -373,8 +373,6 @@ namespace XLua
             local setmetatable = setmetatable
             local import_type = xlua.import_type
             local load_assembly = xlua.load_assembly
-
-            xlua.abaojin = 8888.6666
 
             function metatable:__index(key) 
                 local fqn = rawget(self,'.fqn')
@@ -479,8 +477,7 @@ namespace XLua
 
         public void AddBuildin(string name, LuaCSFunction initer)
         {
-            if (!initer.Method.IsStatic || !Attribute.IsDefined(initer.Method, typeof(MonoPInvokeCallbackAttribute)))
-            {
+            if (!initer.Method.IsStatic || !Attribute.IsDefined(initer.Method, typeof(MonoPInvokeCallbackAttribute))) {
                 throw new Exception("initer must be static and has MonoPInvokeCallback Attribute!");
             }
             buildin_initer.Add(name, initer);
@@ -492,26 +489,22 @@ namespace XLua
         //memory in use to double before starting a new cycle.
         public int GcPause
         {
-            get
-            {
+            get {
 #if THREAD_SAFT || HOTFIX_ENABLE
-                lock (luaEnvLock)
-                {
+                lock (luaEnvLock) {
 #endif
-                    int val = LuaAPI.lua_gc(L, LuaGCOptions.LUA_GCSETPAUSE, 200);
-                    LuaAPI.lua_gc(L, LuaGCOptions.LUA_GCSETPAUSE, val);
-                    return val;
+                int val = LuaAPI.lua_gc(L, LuaGCOptions.LUA_GCSETPAUSE, 200);
+                LuaAPI.lua_gc(L, LuaGCOptions.LUA_GCSETPAUSE, val);
+                return val;
 #if THREAD_SAFT || HOTFIX_ENABLE
                 }
 #endif
             }
-            set
-            {
+            set {
 #if THREAD_SAFT || HOTFIX_ENABLE
-                lock (luaEnvLock)
-                {
+                lock (luaEnvLock) {
 #endif
-                    LuaAPI.lua_gc(L, LuaGCOptions.LUA_GCSETPAUSE, value);
+                LuaAPI.lua_gc(L, LuaGCOptions.LUA_GCSETPAUSE, value);
 #if THREAD_SAFT || HOTFIX_ENABLE
                 }
 #endif
@@ -525,26 +518,22 @@ namespace XLua
         //allocation.
         public int GcStepmul
         {
-            get
-            {
+            get {
 #if THREAD_SAFT || HOTFIX_ENABLE
-                lock (luaEnvLock)
-                {
+                lock (luaEnvLock) {
 #endif
-                    int val = LuaAPI.lua_gc(L, LuaGCOptions.LUA_GCSETSTEPMUL, 200);
-                    LuaAPI.lua_gc(L, LuaGCOptions.LUA_GCSETSTEPMUL, val);
-                    return val;
+                int val = LuaAPI.lua_gc(L, LuaGCOptions.LUA_GCSETSTEPMUL, 200);
+                LuaAPI.lua_gc(L, LuaGCOptions.LUA_GCSETSTEPMUL, val);
+                return val;
 #if THREAD_SAFT || HOTFIX_ENABLE
                 }
 #endif
             }
-            set
-            {
+            set {
 #if THREAD_SAFT || HOTFIX_ENABLE
-                lock (luaEnvLock)
-                {
+                lock (luaEnvLock) {
 #endif
-                    LuaAPI.lua_gc(L, LuaGCOptions.LUA_GCSETSTEPMUL, value);
+                LuaAPI.lua_gc(L, LuaGCOptions.LUA_GCSETSTEPMUL, value);
 #if THREAD_SAFT || HOTFIX_ENABLE
                 }
 #endif
@@ -566,8 +555,7 @@ namespace XLua
         public void StopGc()
         {
 #if THREAD_SAFT || HOTFIX_ENABLE
-            lock (luaEnvLock)
-            {
+            lock (luaEnvLock) {
 #endif
                 LuaAPI.lua_gc(L, LuaGCOptions.LUA_GCSTOP, 0);
 #if THREAD_SAFT || HOTFIX_ENABLE
@@ -578,8 +566,7 @@ namespace XLua
         public void RestartGc()
         {
 #if THREAD_SAFT || HOTFIX_ENABLE
-            lock (luaEnvLock)
-            {
+            lock (luaEnvLock) {
 #endif
                 LuaAPI.lua_gc(L, LuaGCOptions.LUA_GCRESTART, 0);
 #if THREAD_SAFT || HOTFIX_ENABLE
@@ -590,8 +577,7 @@ namespace XLua
         public bool GcStep(int data)
         {
 #if THREAD_SAFT || HOTFIX_ENABLE
-            lock (luaEnvLock)
-            {
+            lock (luaEnvLock) {
 #endif
                 return LuaAPI.lua_gc(L, LuaGCOptions.LUA_GCSTEP, data) != 0;
 #if THREAD_SAFT || HOTFIX_ENABLE
@@ -601,13 +587,11 @@ namespace XLua
 
         public int Memroy
         {
-            get
-            {
+            get {
 #if THREAD_SAFT || HOTFIX_ENABLE
-                lock (luaEnvLock)
-                {
+                lock (luaEnvLock) {
 #endif
-                    return LuaAPI.lua_gc(L, LuaGCOptions.LUA_GCCOUNT, 0);
+                return LuaAPI.lua_gc(L, LuaGCOptions.LUA_GCCOUNT, 0);
 #if THREAD_SAFT || HOTFIX_ENABLE
                 }
 #endif
